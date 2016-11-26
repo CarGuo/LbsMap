@@ -19,4 +19,13 @@ public interface ClusterItem {
     LatLng getPosition();
 
     BitmapDescriptor getBitmapDescriptor();
+
+    BitmapDescriptor getLocalClusterBitmapDescriptor();
+
+    BitmapDescriptor getLocalSingleBitmapDescriptor();
+
+    String getLocalSinglePath();
+
+    String getLocalClusterPath();
+
 }

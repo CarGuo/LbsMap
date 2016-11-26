@@ -141,6 +141,10 @@ public class ClusterManager<T extends ClusterItem> implements
         }
     }
 
+    public Algorithm<T> getAlgorithm() {
+        return mAlgorithm;
+    }
+
     /**
      * Force a re-cluster. You may want to call this after adding new item(s).
      */
@@ -164,11 +168,17 @@ public class ClusterManager<T extends ClusterItem> implements
 
     @Override
     public void onMapStatusChangeStart(MapStatus mapStatus) {
-
+        if (onMapStatusChangeListener != null)
+            onMapStatusChangeListener.onMapStatusChangeStart(mapStatus);
     }
 
     @Override
     public void onMapStatusChange(MapStatus mapStatus) {
+
+
+        if (onMapStatusChangeListener != null)
+            onMapStatusChangeListener.onMapStatusChange(mapStatus);
+
         if (mRenderer instanceof BaiduMap.OnMapStatusChangeListener) {
             ((BaiduMap.OnMapStatusChangeListener) mRenderer).onMapStatusChange(mapStatus);
         }
@@ -186,11 +196,13 @@ public class ClusterManager<T extends ClusterItem> implements
     @Override
     public void onMapStatusChangeFinish(MapStatus mapStatus) {
 
+        if (onMapStatusChangeListener != null)
+            onMapStatusChangeListener.onMapStatusChangeFinish(mapStatus);
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        return getMarkerManager().onMarkerClick(marker);
+        return false;
     }
 
     /**
@@ -276,4 +288,17 @@ public class ClusterManager<T extends ClusterItem> implements
     public interface OnClusterItemInfoWindowClickListener<T extends ClusterItem> {
         public void onClusterItemInfoWindowClick(T item);
     }
+
+    public BaiduMap.OnMapStatusChangeListener onMapStatusChangeListener;
+
+    public DefaultClusterRenderer<T> getDefaultClusterRenderer() {
+        return (DefaultClusterRenderer)mRenderer;
+    }
+
+    public void setOnMapStatusChangeListener(BaiduMap.OnMapStatusChangeListener onMapStatusChangeListener) {
+        this.onMapStatusChangeListener = onMapStatusChangeListener;
+    }
+
+
+
 }

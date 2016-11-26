@@ -61,9 +61,8 @@ public class MarkerManager implements BaiduMap.OnMarkerClickListener, BaiduMap.O
         Collection collection = mAllMarkers.get(marker);
         if (collection != null && collection.mMarkerClickListener != null) {
             // you can set the click action
-            return collection.mMarkerClickListener.onMarkerClick(marker);
-        } else  {
-            ; // click single maker out of cluster
+            collection.mMarkerClickListener.onMarkerClick(marker);
+            return true;
         }
         return false;
     }
@@ -137,6 +136,10 @@ public class MarkerManager implements BaiduMap.OnMarkerClickListener, BaiduMap.O
 
         public java.util.Collection<Marker> getMarkers() {
             return Collections.unmodifiableCollection(mMarkers);
+        }
+
+        public void addMarker(Marker marker) {
+            mMarkers.add(marker);
         }
 
         public void setOnMarkerClickListener(BaiduMap.OnMarkerClickListener markerClickListener) {

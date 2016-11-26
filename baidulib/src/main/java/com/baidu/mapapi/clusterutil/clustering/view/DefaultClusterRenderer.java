@@ -11,20 +11,30 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.graphics.drawable.shapes.RectShape;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.text.TextUtils;
 import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.TextView;
 
+import com.baidu.mapapi.clusterutil.ClusterStatic;
 import com.baidu.mapapi.clusterutil.MarkerManager;
 import com.baidu.mapapi.clusterutil.clustering.Cluster;
 import com.baidu.mapapi.clusterutil.clustering.ClusterItem;
@@ -40,7 +50,10 @@ import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.Projection;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.model.LatLngBounds;
+import com.shuyu.baidulib.R;
 
+import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,24 +67,30 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import baidumapsdk.demo.R;
-
 import static com.baidu.mapapi.clusterutil.clustering.algo.NonHierarchicalDistanceBasedAlgorithm.MAX_DISTANCE_AT_ZOOM;
 
 
 /**
  * The default view for a ClusterManager. Markers are animated in and out of clusters.
  */
+@SuppressLint("NewApi")
 public class DefaultClusterRenderer<T extends ClusterItem> implements
         com.baidu.mapapi.clusterutil.clustering.view.ClusterRenderer<T> {
-    private static final boolean SHOULD_ANIMATE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
+    private static final boolean SHOULD_ANIMATE = false;
+    public static  boolean LOADING_LOGO = false;
     private final BaiduMap mMap;
     private final IconGenerator mIconGenerator;
     private final ClusterManager<T> mClusterManager;
     private final float mDensity;
 
     private static final int[] BUCKETS = {10, 20, 50, 100, 200, 500, 1000};
-    private ShapeDrawable mColoredCircleBackground;
+    // 外部矩形弧度
+    float[] outerR = new float[]{12, 12, 12, 12, 12, 12, 12, 12};
+    // 内部矩形与外部矩形的距离
+    RectF inset = new RectF(0, 0, 0, 0);
+    // 内部矩形弧度
+    float[] innerRadii = new float[]{0, 0, 0, 0, 0, 0, 0, 0};
+    private BitmapDrawable mColoredCircleBackground;
 
     /**
      * Markers that are currently on the map.
@@ -92,7 +111,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
     /**
      * If cluster size is less than this size, display individual markers.
      */
-    private static final int MIN_CLUSTER_SIZE = 4;
+    private static final int MIN_CLUSTER_SIZE = 1;
 
     /**
      * The currently displayed set of clusters.
@@ -109,6 +128,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
      * The target zoom level for the current set of clusters.
      */
     private float mZoom;
+    private Context context;
 
     private final ViewModifier mViewModifier = new ViewModifier();
 
@@ -118,12 +138,13 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
     private ClusterManager.OnClusterItemInfoWindowClickListener<T> mItemInfoWindowClickListener;
 
     public DefaultClusterRenderer(Context context, BaiduMap map, ClusterManager<T> clusterManager) {
+        this.context = context;
         mMap = map;
         mDensity = context.getResources().getDisplayMetrics().density;
-        mIconGenerator = new IconGenerator(context);
+        mIconGenerator = new IconGenerator(context, mDensity);
         mIconGenerator.setContentView(makeSquareTextView(context));
         mIconGenerator.setTextAppearance(R.style.ClusterIcon_TextAppearance);
-        mIconGenerator.setBackground(makeClusterBackground());
+        mIconGenerator.setBackground(makeClusterBackground(null));
         mClusterManager = clusterManager;
     }
 
@@ -152,43 +173,53 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         mClusterManager.getClusterMarkerCollection().setOnMarkerClickListener(null);
     }
 
-    private LayerDrawable makeClusterBackground() {
-        mColoredCircleBackground = new ShapeDrawable(new OvalShape());
-        ShapeDrawable outline = new ShapeDrawable(new OvalShape());
-        outline.getPaint().setColor(0x80ffffff); // Transparent white.
+    private LayerDrawable makeClusterBackground(ClusterItem clusterItem) {
+        //通过openRawResource获取一个inputStream对象,判断聚合用什么图片
+        InputStream inputStream;
+        inputStream = context.getResources().openRawResource(R.raw.map_find_work_bg);
+        BitmapDrawable drawable = new BitmapDrawable(inputStream);
+        mColoredCircleBackground = drawable;
+        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(outerR, inset, null));
+        outline.getPaint().setColor(0x00ffffff); // Transparent white.
         LayerDrawable background = new LayerDrawable(new Drawable[]{outline, mColoredCircleBackground});
         int strokeWidth = (int) (mDensity * 3);
         background.setLayerInset(1, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
         return background;
     }
 
-    private com.baidu.mapapi.clusterutil.ui.SquareTextView makeSquareTextView(Context context) {
-        com.baidu.mapapi.clusterutil.ui.SquareTextView squareTextView =
-                new com.baidu.mapapi.clusterutil.ui.SquareTextView(context);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+    private TextView makeSquareTextView(Context context) {
+        TextView squareTextView =
+                new TextView(context);
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams((int) (33 * mDensity), (int) (54 * mDensity));
         squareTextView.setLayoutParams(layoutParams);
         squareTextView.setId(R.id.text);
-        int twelveDpi = (int) (12 * mDensity);
-        squareTextView.setPadding(twelveDpi, twelveDpi, twelveDpi, twelveDpi);
+        int twelveDpi = (int) (10 * mDensity);
+        squareTextView.setPadding(0, twelveDpi, 0, 0);
+        squareTextView.setTextSize(11);
+        squareTextView.setGravity(Gravity.CENTER_HORIZONTAL);
         return squareTextView;
     }
 
     private int getColor(int clusterSize) {
-        final float hueRange = 220;
+        /*final float hueRange = 220;
         final float sizeRange = 300;
         final float size = Math.min(clusterSize, sizeRange);
         final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
         return Color.HSVToColor(new float[]{
                 hue, 1f, .6f
-        });
+        });*/
+        return Color.argb(100, 0, 0, 0);
     }
 
     protected String getClusterText(int bucket) {
         if (bucket < BUCKETS[0]) {
             return String.valueOf(bucket);
         }
-        return String.valueOf(bucket) + "+";
+        if (bucket > 999) {
+            bucket = 999;
+            return String.valueOf(bucket) + "+";
+        }
+        return String.valueOf(bucket);
     }
 
     /**
@@ -433,7 +464,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
 
     @Override
     public void setOnClusterInfoWindowClickListener(ClusterManager
-                                                                .OnClusterInfoWindowClickListener<T> listener) {
+                                                            .OnClusterInfoWindowClickListener<T> listener) {
         mInfoWindowClickListener = listener;
     }
 
@@ -444,7 +475,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
 
     @Override
     public void setOnClusterItemInfoWindowClickListener(ClusterManager
-                                                                    .OnClusterItemInfoWindowClickListener<T> listener) {
+                                                                .OnClusterItemInfoWindowClickListener<T> listener) {
         mItemInfoWindowClickListener = listener;
     }
 
@@ -626,7 +657,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
                 lock.lock();
                 return !(mCreateMarkerTasks.isEmpty() && mOnScreenCreateMarkerTasks.isEmpty()
                         && mOnScreenRemoveMarkerTasks.isEmpty() && mRemoveMarkerTasks.isEmpty()
-                                && mAnimationTasks.isEmpty());
+                        && mAnimationTasks.isEmpty());
             } finally {
                 lock.unlock();
             }
@@ -689,6 +720,29 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         }
     }
 
+    private LayerDrawable makeLocalClusterBackground(ClusterItem clusterItem) {
+
+        BitmapDrawable drawable = new BitmapDrawable(clusterItem.getLocalClusterPath());
+        if (drawable.getBitmap() == null) {
+            File file = new File(clusterItem.getLocalClusterPath());
+            try {
+                if (!DefaultClusterRenderer.LOADING_LOGO)
+                    file.delete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return makeClusterBackground(clusterItem);
+        }
+        mColoredCircleBackground = drawable;
+        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(outerR, inset, null));
+        outline.getPaint().setColor(0x00ffffff); // Transparent white.
+        LayerDrawable background = new LayerDrawable(new Drawable[]{outline, mColoredCircleBackground});
+        int strokeWidth = (int) (mDensity * 3);
+        background.setLayerInset(1, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
+        return background;
+    }
+
+
     /**
      * Called before the marker for a ClusterItem is added to the map.
      */
@@ -701,12 +755,23 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
      */
     protected void onBeforeClusterRendered(Cluster<T> cluster, MarkerOptions markerOptions) {
         int bucket = getBucket(cluster);
-        BitmapDescriptor descriptor = mIcons.get(bucket);
-        if (descriptor == null) {
-            mColoredCircleBackground.getPaint().setColor(getColor(bucket));
-            descriptor = BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon(getClusterText(bucket)));
-            mIcons.put(bucket, descriptor);
+        ClusterItem clusterItem = null;
+
+        for (T item : cluster.getItems()) {
+            clusterItem = item;
+            break;
         }
+
+        if (clusterItem != null && !TextUtils.isEmpty(clusterItem.getLocalClusterPath()) && new File(clusterItem.getLocalClusterPath()).exists()) {
+            mIconGenerator.setBackground(
+                    makeLocalClusterBackground(clusterItem));
+        } else {
+            mIconGenerator.setBackground(makeClusterBackground(clusterItem));
+        }
+
+        BitmapDescriptor descriptor = mIcons.get(bucket);
+        descriptor = BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon(getClusterText(cluster.getSize())));
+        mIcons.put(bucket, descriptor);
         // TODO: consider adding anchor(.5, .5) (Individual markers will overlap more often)
         markerOptions.icon(descriptor);
     }
@@ -786,18 +851,32 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         private void perform(MarkerModifier markerModifier) {
             // Don't show small clusters. Render the markers inside, instead.
             if (!shouldRenderAsCluster(cluster)) {
+                /**如果此处没有需要聚合的**/
                 for (T item : cluster.getItems()) {
                     Marker marker = mMarkerCache.get(item);
                     MarkerWithPosition markerWithPosition;
                     if (marker == null) {
                         MarkerOptions markerOptions = new MarkerOptions();
+                        //markerOptions.animateType(MarkerOptions.MarkerAnimateType.grow);
+
+                        BitmapDescriptor bitmapDescriptor;
+                        if (!TextUtils.isEmpty(item.getLocalSinglePath()) && new File(item.getLocalSinglePath()).exists()) {
+                            bitmapDescriptor = item.getLocalSingleBitmapDescriptor();
+                            if (bitmapDescriptor == null) {
+                                bitmapDescriptor = item.getBitmapDescriptor();
+                            }
+                        } else {
+                            bitmapDescriptor = item.getBitmapDescriptor();
+                        }
+
                         if (animateFrom != null) {
                             markerOptions.position(animateFrom);
-                            markerOptions.icon(item.getBitmapDescriptor());
+                            markerOptions.icon(bitmapDescriptor);
                         } else {
                             markerOptions.position(item.getPosition());
-                            markerOptions.icon(item.getBitmapDescriptor());
+                            markerOptions.icon(bitmapDescriptor);
                         }
+
                         onBeforeClusterItemRendered(item, markerOptions);
                         marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
                         markerWithPosition = new MarkerWithPosition(marker);
@@ -817,6 +896,8 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
             MarkerOptions markerOptions = new MarkerOptions()
                     .position(animateFrom == null ? cluster.getPosition() : animateFrom);
 
+            //markerOptions.animateType(MarkerOptions.MarkerAnimateType.grow);
+            /**显示聚合之前完善图片信息**/
             onBeforeClusterRendered(cluster, markerOptions);
 
             Marker marker = mClusterManager.getClusterMarkerCollection().addMarker(markerOptions);

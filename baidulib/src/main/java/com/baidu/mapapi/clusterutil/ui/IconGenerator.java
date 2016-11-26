@@ -4,6 +4,8 @@
 
 package com.baidu.mapapi.clusterutil.ui;
 
+
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -15,7 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import baidumapsdk.demo.R;
+import com.shuyu.baidulib.R;
 
 
 /**
@@ -39,15 +41,17 @@ public class IconGenerator {
 
     private float mAnchorU = 0.5f;
     private float mAnchorV = 1f;
+    private final float mDensity;
 
     /**
      * Creates a new IconGenerator with the default style.
      */
-    public IconGenerator(Context context) {
+    public IconGenerator(Context context, float density) {
         mContext = context;
         mContainer = (ViewGroup) LayoutInflater.from(mContext).inflate(R.layout.text_bubble, null);
         mRotationLayout = (RotationLayout) mContainer.getChildAt(0);
         mContentView = mTextView = (TextView) mRotationLayout.findViewById(R.id.text);
+        mDensity = density;
         setStyle(STYLE_DEFAULT);
     }
 
@@ -74,8 +78,8 @@ public class IconGenerator {
         int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         mContainer.measure(measureSpec, measureSpec);
 
-        int measuredWidth = mContainer.getMeasuredWidth();
-        int measuredHeight = mContainer.getMeasuredHeight();
+        int measuredWidth = (int) (33 * mDensity);
+        int measuredHeight = (int) (54 * mDensity);
 
         mContainer.layout(0, 0, measuredWidth, measuredHeight);
 
@@ -214,11 +218,34 @@ public class IconGenerator {
         if (background != null) {
             Rect rect = new Rect();
             background.getPadding(rect);
-            mContainer.setPadding(rect.left, rect.top, rect.right, rect.bottom);
+            //mContainer.setPadding(rect.left, rect.top, rect.right, rect.bottom);
+            mContainer.setPadding(0, 0, 0, 0);
         } else {
             mContainer.setPadding(0, 0, 0, 0);
         }
     }
+
+
+    /**
+     * Set the background to a given Drawable, or remove the background.
+     *
+     * @param background the Drawable to use as the background, or null to remove the background.
+     */
+    @SuppressWarnings("deprecation")
+    // View#setBackgroundDrawable is compatible with pre-API level 16 (Jelly Bean).
+    public void setBackground(int background) {
+        mContainer.setBackgroundResource(background);
+        // Force setting of padding.
+        // setBackgroundDrawable does not call setPadding if the background has 0 padding.
+        if (background > 0) {
+            //Rect rect = new Rect();
+            //background.getPadding(rect);
+            //mContainer.setPadding(rect.left, rect.top, rect.right, rect.bottom);
+        } else {
+            mContainer.setPadding(0, 0, 0, 0);
+        }
+    }
+
 
     /**
      * Sets the padding of the content view. The default padding of the content view (i.e. text

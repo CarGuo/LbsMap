@@ -12,6 +12,8 @@ import android.widget.TextView;
 public class SquareTextView extends TextView {
     private int mOffsetTop = 0;
     private int mOffsetLeft = 0;
+    private int newHeight;
+    private int width;
 
     public SquareTextView(Context context) {
         super(context);
@@ -28,22 +30,25 @@ public class SquareTextView extends TextView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width = getMeasuredWidth();
+        width = getMeasuredWidth();
         int height = getMeasuredHeight();
-        int dimension = Math.max(width, height);
-        if (width > height) {
+        //this.height = height;
+        //int dimension = Math.max(width, height);
+        /*if (width > height) {
             mOffsetTop = width - height;
             mOffsetLeft = 0;
         } else {
             mOffsetTop = 0;
             mOffsetLeft = height - width;
-        }
-        setMeasuredDimension(dimension, dimension);
+        }*/
+        newHeight = width * 136 /  83;
+
+        setMeasuredDimension(width, newHeight);
     }
 
     @Override
     public void draw(Canvas canvas) {
-        canvas.translate(mOffsetLeft / 2, mOffsetTop / 2);
+        canvas.translate(width / 2, 0);
         super.draw(canvas);
     }
 }
