@@ -102,7 +102,7 @@ public class RequestLogicJob extends Job {
         @Override
         protected void onSuccess(final JSONObject jsonObject) {
             super.onSuccess(jsonObject);
-            new Thread(new Runnable() {
+             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     JSONArray dataJSON = jsonObject.getJSONArray("contents");

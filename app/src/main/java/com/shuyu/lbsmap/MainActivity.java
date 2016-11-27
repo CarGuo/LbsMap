@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import com.baidu.mapapi.clusterutil.clustering.Cluster;
+import com.baidu.mapapi.clusterutil.clustering.ClusterManager;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.MapStatus;
@@ -17,7 +19,6 @@ import com.shuyu.lbsmap.job.IConJob;
 import com.shuyu.lbsmap.job.RequestLogicJob;
 import com.shuyu.lbsmap.model.IconModel;
 import com.shuyu.lbsmap.model.LBSModel;
-import com.shuyu.lbsmap.model.SearchModel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,13 +37,13 @@ public class MainActivity extends BaseActivity {
 
     int mTotalCount;
 
-    SearchModel mSearchModel;
-
     Handler mHandler = new Handler();
 
     NetRunnable mNetRunnable;
 
     List<ClusterBaiduItem> mClusterBaiduItems = new ArrayList<>();
+
+    ClusterBaiduItem mClickItem;
 
     List<LBSModel> mDataList = new ArrayList<>();
 
@@ -51,6 +52,10 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         initListeners();
+
+        showLoadingDialog();
+
+        FingerRequestLogic(false, false);
     }
 
     @Override
@@ -60,6 +65,7 @@ public class MainActivity extends BaseActivity {
     }
 
     protected void initListeners() {
+
         //移动，方式，经纬度变化
         mClusterManager.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
 
@@ -79,7 +85,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
-
+                //如果首次会出现切换城市的话
                 if (mNeedRequest) {
                     mNeedRequest = false;
                     showLoadingDialog();
@@ -91,6 +97,33 @@ public class MainActivity extends BaseActivity {
                     }
                 }
                 mCurrentMapStatus = mapStatus;
+            }
+        });
+
+        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                //传入点击的marker
+                return mMarkerManager.onMarkerClick(marker);
+            }
+        });
+
+        //单个的点击
+        mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterBaiduItem>() {
+            @Override
+            public boolean onClusterItemClick(ClusterBaiduItem item) {
+                mClickItem = item;
+                Toast.makeText(MainActivity.this, item.getLBAModel().getTitle(), Toast.LENGTH_LONG).show();
+                return true;
+            }
+        });
+
+        //聚合的点击
+        mClusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<ClusterBaiduItem>() {
+            @Override
+            public boolean onClusterClick(Cluster<ClusterBaiduItem> cluster) {
+                Toast.makeText(MainActivity.this, "聚合列表：" + cluster.getSize(), Toast.LENGTH_LONG).show();
+                return true;
             }
         });
 
@@ -212,7 +245,7 @@ public class MainActivity extends BaseActivity {
 
         DownLoadIcons(mClusterBaiduItems);
 
-        showLoaing();
+        showLoading();
 
         dismissLoadingDialog();
 
@@ -264,7 +297,6 @@ public class MainActivity extends BaseActivity {
     }
 
 
-
     /**
      * 清除请求状态
      */
@@ -291,7 +323,7 @@ public class MainActivity extends BaseActivity {
             if (mUUID.equals(e.getUUID())) {
                 if (e.getEventType() == RequestDataEvent.FAIL)
                     Toast.makeText(this, "加载数据失败。", Toast.LENGTH_SHORT).show();
-                showLoaing();
+                showLoading();
             }
         }
 

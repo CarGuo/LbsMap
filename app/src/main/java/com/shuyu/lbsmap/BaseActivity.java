@@ -20,6 +20,7 @@ import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.shuyu.lbsmap.model.SearchModel;
 import com.shuyu.lbsmap.utils.CommonUtil;
+import com.shuyu.lbsmap.utils.LocationLevelUtils;
 import com.shuyu.lbsmap.view.LoadingDialog;
 
 import butterknife.BindView;
@@ -37,7 +38,6 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
     MapView mBaiduMapView;
     @BindView(R.id.refresh)
     Button refresh;
-
 
     //主要的操作对象是它
     BaiduMap mBaiduMap;
@@ -68,6 +68,8 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
     int mMaxPageSize;
 
     int mIndex;
+
+    int mDefaultRadius = 5000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,6 +127,7 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
 
     @OnClick(R.id.refresh)
     public void onClick() {
+        showLoadingDialog();
         PageIndex();
         loading();
     }
@@ -147,6 +150,10 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
         mMarkerManager = new MarkerManager(mBaiduMap);
         //聚合与渲染管理器
         mClusterManager = new ClusterManager<>(this, mBaiduMap, mMarkerManager);
+
+        mBaiduMap.setOnMapStatusChangeListener(mClusterManager);
+
+        mBaiduMap.setOnMapLoadedCallback(this);
 
         mBaiduMap.setMyLocationEnabled(true);
 
@@ -184,16 +191,18 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
 
         mCurrentLatLng = new LatLng(llng, llat);
 
-        mCurrentMapStatus = new MapStatus.Builder().target(new LatLng(llat, llng)).zoom(14).build();
+        //显示等级-转换,初始化为mDefaultRadius半径的大小
+        float level = LocationLevelUtils.returnCurZoom(mDefaultRadius);
+
+        mCurrentMapStatus = new MapStatus.Builder().target(new LatLng(llat, llng)).zoom(level).build();
         // 定义点聚合管理类ClusterManager
         mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(mCurrentMapStatus));
 
 
         mSearchModel = new SearchModel();
         mSearchModel.setGps(llng + "," + llat);
-        //// TODO: 2016/11/27 设置公里数
-        mSearchModel.setRadius(15000);
-        mSearchModel.setLevel(14);
+        mSearchModel.setRadius(mDefaultRadius);
+        mSearchModel.setLevel(level);
         mSearchModel.setTableId(DemoApplication.TABLE_ID());
 
 
@@ -211,7 +220,7 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
         mIsLoading = false;
     }
 
-    protected void showLoaing() {
+    protected void showLoading() {
         refresh.setVisibility(View.VISIBLE);
         mIsLoading = false;
 

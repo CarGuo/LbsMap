@@ -111,13 +111,6 @@ public class CommonUtil {
     }
 
 
-
-
-
-
-
-
-
     /**
      * 计算sn跟参数对出现顺序有关，所以用LinkedHashMap保存<key,value>，此方法适用于get请求，
      * 如果是为发送post请求的url生成签名，请保证参数对按照key的字母顺序依次放入Map.

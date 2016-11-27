@@ -1,10 +1,12 @@
 package com.shuyu.lbsmap;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.baidu.mapapi.SDKInitializer;
 import com.path.android.jobqueue.JobManager;
 import com.path.android.jobqueue.config.Configuration;
+import com.path.android.jobqueue.log.CustomLogger;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,9 +34,29 @@ public class DemoApplication extends Application {
 
         Configuration netConfig = new Configuration.Builder(this).minConsumerCount(1)
                 .maxConsumerCount(5)
-                .loadFactor(3)
-                .consumerKeepAlive(360)
-                .id("JobManager").build();
+                .loadFactor(2)
+                .consumerKeepAlive(120)
+                .id("JobManager").customLogger(new CustomLogger() {
+                    @Override
+                    public boolean isDebugEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public void d(String s, Object... objects) {
+                        Log.d("JOB", String.format("Debug:%s", s));
+                    }
+
+                    @Override
+                    public void e(Throwable throwable, String s, Object... objects) {
+                        Log.d("JOB", String.format("Error:%s", s));
+                    }
+
+                    @Override
+                    public void e(String s, Object... objects) {
+                        Log.d("JOB", String.format("Error:%s", s));
+                    }
+                }).build();
         mJobManager = new JobManager(this, netConfig);
 
         OkHttpFinalConfiguration.Builder builder = new OkHttpFinalConfiguration.Builder();
