@@ -103,7 +103,7 @@ public class CommonUtil {
         urlMap.put("location", "" + searchModel.getGps());
 
         //半径
-        urlMap.put("radius", "" + searchModel.getGps());
+        urlMap.put("radius", "" + searchModel.getRadius());
 
         //关键字q，标签tag，排序sort，过滤等
 

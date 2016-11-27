@@ -77,7 +77,7 @@ public class RequestLogicJob extends Job {
 
     private void requestCloudData() {
 
-        paramsMap = resolveUrlMap(mSearchModel, mPageIndex, 50);
+        paramsMap = resolveUrlMap(mSearchModel, mPageIndex, DemoApplication.PAGE_SIZE);
 
         //头部链接
         String urlHead = "/geosearch/v3/nearby?";
