@@ -113,7 +113,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public boolean onClusterItemClick(ClusterBaiduItem item) {
                 mClickItem = item;
-                Toast.makeText(MainActivity.this, item.getLBAModel().getTitle(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, item.getLBAModel().getTitle(), Toast.LENGTH_SHORT).show();
                 return true;
             }
         });
@@ -122,7 +122,7 @@ public class MainActivity extends BaseActivity {
         mClusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<ClusterBaiduItem>() {
             @Override
             public boolean onClusterClick(Cluster<ClusterBaiduItem> cluster) {
-                Toast.makeText(MainActivity.this, "聚合列表：" + cluster.getSize(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "聚合列表：" + cluster.getSize(), Toast.LENGTH_SHORT).show();
                 return true;
             }
         });
