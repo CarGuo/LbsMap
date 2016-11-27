@@ -78,7 +78,7 @@ public class IconGenerator {
         int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         mContainer.measure(measureSpec, measureSpec);
 
-        int measuredWidth = (int) (33 * mDensity);
+        int measuredWidth = (int) (54 * mDensity);
         int measuredHeight = (int) (54 * mDensity);
 
         mContainer.layout(0, 0, measuredWidth, measuredHeight);

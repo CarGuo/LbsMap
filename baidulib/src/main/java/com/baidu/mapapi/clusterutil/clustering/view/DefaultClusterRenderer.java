@@ -13,6 +13,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -185,25 +186,11 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
     private TextView makeSquareTextView(Context context) {
         TextView squareTextView =
                 new TextView(context);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams((int) (33 * mDensity), (int) (54 * mDensity));
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams((int) (54 * mDensity), (int) (54 * mDensity));
         squareTextView.setLayoutParams(layoutParams);
         squareTextView.setId(R.id.text);
-        int twelveDpi = (int) (10 * mDensity);
-        squareTextView.setPadding(0, twelveDpi, 0, 0);
-        squareTextView.setTextSize(11);
-        squareTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+        squareTextView.setGravity(Gravity.CENTER);
         return squareTextView;
-    }
-
-    private int getColor(int clusterSize) {
-        /*final float hueRange = 220;
-        final float sizeRange = 300;
-        final float size = Math.min(clusterSize, sizeRange);
-        final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
-        return Color.HSVToColor(new float[]{
-                hue, 1f, .6f
-        });*/
-        return Color.argb(100, 0, 0, 0);
     }
 
     protected String getClusterText(int bucket) {

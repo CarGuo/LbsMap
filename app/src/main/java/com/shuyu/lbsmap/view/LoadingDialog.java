@@ -13,7 +13,7 @@ public class LoadingDialog extends Dialog {
 	private Context mContext;
 
 	public LoadingDialog(Context context) {
-		super(context);
+		super(context, R.style.DialogTheme);
 		this.mContext = context;
 	}
 

@@ -11,9 +11,15 @@
     </style>
 
     <style name="ClusterIcon.TextAppearance" parent="android:TextAppearance">
-        <item name="android:textColor">#ffeeeeee</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
+
+        <item name="android:shadowColor">#505050</item>
+        <item name="android:shadowRadius">1</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+
     </style>
 
 </resources>
