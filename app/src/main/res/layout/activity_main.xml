@@ -9,4 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clickable="true" />
+
+    <Button
+        android:id="@+id/refresh"
+        android:layout_width="150dp"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="20dp"
+        android:text="刷新" />
+
 </RelativeLayout>

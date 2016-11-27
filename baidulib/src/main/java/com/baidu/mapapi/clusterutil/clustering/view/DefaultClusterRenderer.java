@@ -11,16 +11,12 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.RectShape;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.os.Handler;
@@ -34,7 +30,6 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 
-import com.baidu.mapapi.clusterutil.ClusterStatic;
 import com.baidu.mapapi.clusterutil.MarkerManager;
 import com.baidu.mapapi.clusterutil.clustering.Cluster;
 import com.baidu.mapapi.clusterutil.clustering.ClusterItem;
@@ -768,7 +763,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         } else {
             mIconGenerator.setBackground(makeClusterBackground(clusterItem));
         }
-
+        //change
         BitmapDescriptor descriptor = mIcons.get(bucket);
         descriptor = BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon(getClusterText(cluster.getSize())));
         mIcons.put(bucket, descriptor);

@@ -44,11 +44,11 @@
 
         <meta-data
             android:name="api_key"
-            android:value="LRuwPMjEopybngqzi8zvZTSq" />
+            android:value="CirU5l4MGVbE59tOduYDCO6TDX27CPzV" />
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="请输入KEY" />
+            android:value="CirU5l4MGVbE59tOduYDCO6TDX27CPzV" />
 
     </application>
 

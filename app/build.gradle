@@ -22,6 +22,36 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
+
+    signingConfigs {
+        release {
+            storeFile file("../debug.jks")
+            storePassword "123456"
+            keyAlias "debug"
+            keyPassword "123456"
+        }
+
+        debug {
+            storeFile file("../debug.jks")
+            storePassword "123456"
+            keyAlias "debug"
+            keyPassword "123456"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
 }
 
 dependencies {
@@ -29,4 +59,5 @@ dependencies {
     compile project(':baidulib')
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
     compile 'com.jakewharton:butterknife:8.2.1'
+    compile 'cn.finalteam:okhttpfinal:2.0.7'
 }

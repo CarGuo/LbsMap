@@ -3,15 +3,61 @@ package com.shuyu.lbsmap;
 import android.app.Application;
 
 import com.baidu.mapapi.SDKInitializer;
+import com.path.android.jobqueue.JobManager;
+import com.path.android.jobqueue.config.Configuration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import cn.finalteam.okhttpfinal.OkHttpFinal;
+import cn.finalteam.okhttpfinal.OkHttpFinalConfiguration;
+import de.greenrobot.event.EventBus;
+
 public class DemoApplication extends Application {
 
-    private static AtomicReference<DemoApplication> mInstance = new AtomicReference<DemoApplication>();
+    private static AtomicReference<DemoApplication> mInstance = new AtomicReference<>();
+
+    public final static int PAGE_SIZE = 20;//最大可以50
+
+    private EventBus mEventBus;
+
+    private JobManager mJobManager;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        mInstance.set(this);
+
+        mEventBus = EventBus.getDefault();
+
+        Configuration netConfig = new Configuration.Builder(this).minConsumerCount(1)
+                .maxConsumerCount(5)
+                .loadFactor(3)
+                .consumerKeepAlive(360)
+                .id("JobManager").build();
+        mJobManager = new JobManager(this, netConfig);
+
+        OkHttpFinalConfiguration.Builder builder = new OkHttpFinalConfiguration.Builder();
+        OkHttpFinal.getInstance().init(builder.build());
+
+        // 在使用 SDK 各组间之前初始化 context 信息，传入 ApplicationContext
+        SDKInitializer.initialize(this);
+    }
+
+    public static DemoApplication getApplication() {
+        return mInstance.get();
+    }
+
+    public EventBus getEventBus() {
+        return mEventBus;
+    }
+
+    public JobManager getJobManager() {
+        return mJobManager;
+    }
 
     public static String SK() {
-        return "";
+        return "PWTIyZGdbBTtXri84Oj3NC932DhxXN8n";
     }
 
     public static String AK() {
@@ -19,20 +65,7 @@ public class DemoApplication extends Application {
     }
 
     public static int TABLE_ID() {
-        return 0;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        mInstance.set(this);
-        // 在使用 SDK 各组间之前初始化 context 信息，传入 ApplicationContext
-        SDKInitializer.initialize(this);
-    }
-
-    public static DemoApplication get() {
-        return mInstance.get();
+        return 158714;
     }
 
 }
