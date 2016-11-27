@@ -63,7 +63,7 @@ public class ClusterBaiduItem implements ClusterItem {
         }
 
         return BitmapDescriptorFactory
-                .fromResource(R.drawable.baidu_map_loaction);
+                .fromResource(R.drawable.default_map_icon);
     }
 
     @Override

@@ -27,6 +27,7 @@ import cn.finalteam.okhttpfinal.JsonHttpRequestCallback;
 import static com.shuyu.lbsmap.utils.CommonUtil.SignSN;
 import static com.shuyu.lbsmap.utils.CommonUtil.MapToUrl;
 import static com.shuyu.lbsmap.utils.CommonUtil.resolveUrlMap;
+import static com.shuyu.lbsmap.utils.FileUtils.getLogoNamePath;
 
 public class RequestLogicJob extends Job {
 
@@ -170,12 +171,16 @@ public class RequestLogicJob extends Job {
 
 
     private static void BaiduItemLogic(List<ClusterBaiduItem> items, List<LBSModel> list) {
-
         for (LBSModel lbsModel : list) {
             LatLng ll = new LatLng(lbsModel.getLocation()[1], lbsModel.getLocation()[0]);
             ClusterBaiduItem baiduItem = new ClusterBaiduItem(ll);
             baiduItem.setItemAddress(lbsModel.getAddress());
             baiduItem.setLBAModel(lbsModel);
+            baiduItem.setIcon_url(lbsModel.getIcons());
+            //如果是图片字段会变为几个尺寸的model
+            if (!TextUtils.isEmpty(lbsModel.getIcons())) {
+                baiduItem.setLocalSinglePath(getLogoNamePath(lbsModel.getIcons()));
+            }
             items.add(baiduItem);
         }
     }

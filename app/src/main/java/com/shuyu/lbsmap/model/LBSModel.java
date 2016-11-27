@@ -13,7 +13,7 @@ public class LBSModel {
     private String district;
     private String address;
 
-    private String icon;
+    private String icons;
 
     private long geotable_id;
 
@@ -79,12 +79,12 @@ public class LBSModel {
         this.address = address;
     }
 
-    public String getIcon() {
-        return icon;
+    public String getIcons() {
+        return icons;
     }
 
-    public void setIcon(String icon) {
-        this.icon = icon;
+    public void setIcons(String icons) {
+        this.icons = icons;
     }
 
     public double getLongitude() {

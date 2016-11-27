@@ -32,7 +32,7 @@ public class CommonUtil {
     public static Point getBitmapSize() {
 
         if (bitmapSize == null) {
-            Bitmap var2 = BitmapFactory.decodeResource(DemoApplication.getApplication().getResources(), R.drawable.icon_redbag);
+            Bitmap var2 = BitmapFactory.decodeResource(DemoApplication.getApplication().getResources(), R.drawable.defualt_map_size_icon);
             bitmapSize = new Point(var2.getWidth(), var2.getHeight());
             var2.recycle();
         }

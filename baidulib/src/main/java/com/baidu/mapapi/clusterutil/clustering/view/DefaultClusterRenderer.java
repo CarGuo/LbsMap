@@ -171,7 +171,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
     private LayerDrawable makeClusterBackground(ClusterItem clusterItem) {
         //通过openRawResource获取一个inputStream对象,判断聚合用什么图片
         InputStream inputStream;
-        inputStream = context.getResources().openRawResource(R.raw.map_find_work_bg);
+        inputStream = context.getResources().openRawResource(R.raw.cluster);
         BitmapDrawable drawable = new BitmapDrawable(inputStream);
         mColoredCircleBackground = drawable;
         ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(outerR, inset, null));
