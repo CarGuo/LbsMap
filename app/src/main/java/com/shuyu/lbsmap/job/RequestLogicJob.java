@@ -3,7 +3,6 @@ package com.shuyu.lbsmap.job;
 
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -24,20 +23,18 @@ import java.util.Map;
 import cn.finalteam.okhttpfinal.HttpRequest;
 import cn.finalteam.okhttpfinal.JsonHttpRequestCallback;
 
-import static com.shuyu.lbsmap.utils.CommonUtil.SignSN;
+import static com.shuyu.lbsmap.utils.CommonUtil.SNLogic;
 import static com.shuyu.lbsmap.utils.CommonUtil.MapToUrl;
-import static com.shuyu.lbsmap.utils.CommonUtil.resolveUrlMap;
+import static com.shuyu.lbsmap.utils.CommonUtil.inputMapForUrl;
 import static com.shuyu.lbsmap.utils.FileUtils.getLogoNamePath;
 
 public class RequestLogicJob extends Job {
-
-    private final static String TAG = "RequestLogicJob";
 
     private List<ClusterBaiduItem> mClusterBaiduItems = new ArrayList<>();
 
     private String mUUID;
 
-    private Map<String, String> paramsMap;
+    private Map<String, String> urlMap;
 
     private SearchModel mSearchModel;
 
@@ -49,7 +46,7 @@ public class RequestLogicJob extends Job {
         super(new Params(1000));
     }
 
-    public RequestLogicJob(SearchModel searchModel, int pageIndex,  String uuid) {
+    public RequestLogicJob(SearchModel searchModel, int pageIndex, String uuid) {
         super(new Params(1000));
         this.mSearchModel = searchModel;
         this.mPageIndex = pageIndex;
@@ -77,33 +74,35 @@ public class RequestLogicJob extends Job {
 
     private void requestCloudData() {
 
-        paramsMap = resolveUrlMap(mSearchModel, mPageIndex, DemoApplication.PAGE_SIZE);
+        urlMap = inputMapForUrl(mSearchModel, mPageIndex, DemoApplication.PAGE_SIZE);
 
         //头部链接
-        String urlHead = "/geosearch/v3/nearby?";
+        String requestHeader = "/geosearch/v3/nearby?";
 
         //sn签名
-        String sn = SignSN(urlHead, paramsMap);
+        String sn = SNLogic(requestHeader, urlMap);
 
-        final String url = "http://api.map.baidu.com" + urlHead + MapToUrl(paramsMap) + "&sn=" + sn;
+        //生成请求URL
+        final String url = "http://api.map.baidu.com" + requestHeader + MapToUrl(urlMap) + "&sn=" + sn;
 
-        Log.i(TAG, "url " + url.replace("|", "%7C"));
-
+        //发起请求
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                HttpRequest.get(url.replace("|", "%7C"), new getDataListener());
+                HttpRequest.get(url, new getDataListener());
             }
         });
     }
 
-
+    /**
+     * 拿到了数据
+     */
     private class getDataListener extends JsonHttpRequestCallback {
 
         @Override
         protected void onSuccess(final JSONObject jsonObject) {
             super.onSuccess(jsonObject);
-             new Thread(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     JSONArray dataJSON = jsonObject.getJSONArray("contents");
@@ -137,11 +136,16 @@ public class RequestLogicJob extends Job {
 
     }
 
+    /**
+     * 返回数据
+     */
     private void successResult(int totalCount, List<LBSModel> lbsModels) {
         if (lbsModels != null && lbsModels.size() != 0) {
             this.mClusterBaiduItems.clear();
+
             //生成百度items
-            bindBaiduItemList(lbsModels);
+            BaiduItemLogic(lbsModels);
+
             RequestDataEvent requestDataEvent = new RequestDataEvent();
             requestDataEvent.setEventType(RequestDataEvent.SUCCESS);
             requestDataEvent.setClusterBaiduItems(mClusterBaiduItems);
@@ -149,11 +153,10 @@ public class RequestLogicJob extends Job {
             requestDataEvent.setLastSize(lbsModels.size());
             requestDataEvent.setUUID(mUUID);
             requestDataEvent.setTotalSize(totalCount);
-            requestDataEvent.setParamsMap(paramsMap);
+            requestDataEvent.setParamsMap(urlMap);
             DemoApplication.getApplication().getEventBus().post(requestDataEvent);
 
         } else {
-
             RequestDataEvent requestDataEvent = new RequestDataEvent();
             requestDataEvent.setEventType(RequestDataEvent.NULL);
             requestDataEvent.setUUID(mUUID);
@@ -162,30 +165,30 @@ public class RequestLogicJob extends Job {
         }
     }
 
-
-    private void bindBaiduItemList(List<LBSModel> list) {
+    /**
+     * 组装百度需要的item
+     */
+    private void BaiduItemLogic(List<LBSModel> list) {
+        mClusterBaiduItems.clear();
         List<ClusterBaiduItem> items = new ArrayList<>();
-        BaiduItemLogic(items, list);
-        mClusterBaiduItems.addAll(items);
-    }
-
-
-    private static void BaiduItemLogic(List<ClusterBaiduItem> items, List<LBSModel> list) {
         for (LBSModel lbsModel : list) {
             LatLng ll = new LatLng(lbsModel.getLocation()[1], lbsModel.getLocation()[0]);
             ClusterBaiduItem baiduItem = new ClusterBaiduItem(ll);
-            baiduItem.setItemAddress(lbsModel.getAddress());
+            baiduItem.setMarkerAddress(lbsModel.getAddress());
             baiduItem.setLBAModel(lbsModel);
-            baiduItem.setIcon_url(lbsModel.getIcons());
+            baiduItem.setMarkerUrl(lbsModel.getIcons());
             //如果是图片字段会变为几个尺寸的model
             if (!TextUtils.isEmpty(lbsModel.getIcons())) {
-                baiduItem.setLocalSinglePath(getLogoNamePath(lbsModel.getIcons()));
+                baiduItem.setUrlMarkerPath(getLogoNamePath(lbsModel.getIcons()));
             }
             items.add(baiduItem);
         }
+        mClusterBaiduItems.addAll(items);
     }
 
-
+    /**
+     * 请求失败
+     */
     private void FailToEvent() {
         RequestDataEvent requestDataEvent = new RequestDataEvent();
         requestDataEvent.setEventType(RequestDataEvent.FAIL);

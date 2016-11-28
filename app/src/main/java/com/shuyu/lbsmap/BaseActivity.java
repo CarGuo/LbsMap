@@ -42,11 +42,13 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
     //主要的操作对象是它
     BaiduMap mBaiduMap;
 
+    //聚合管理器
     ClusterManager<ClusterBaiduItem> mClusterManager;
 
+    //图标管理器
     MarkerManager mMarkerManager;
 
-    //当前图片状态
+    //当前位置的图片
     Bitmap mCLBitmap;
 
     //当前地图状态
@@ -55,20 +57,25 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
     //当前地图变化状态
     MapStatus mChangeStatus;
 
-    LatLng mCurrentLatLng;
+    //请求tag标志，用来判断是否最新请求，对应其实可以设置OKHTTP来抛弃请求
+    String mUUID = "";
 
-    String mUUID = "";//请求tag标志，可以设置OKHTTP来抛弃请求
-
+    //loading框
     LoadingDialog mLoadingDialog;
 
+    //集合搜索的model，更具搜索model组装数据
     SearchModel mSearchModel;
 
+    //是否loading中
     boolean mIsLoading;
 
+    //最大页
     int mMaxPageSize;
 
+    //当前请求页面
     int mIndex;
 
+    //初始化默认搜索范围
     int mDefaultRadius = 5000;
 
     @Override
@@ -93,10 +100,11 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
             DemoApplication.getApplication().getEventBus().unregister(this);
         }
 
+        //销毁对应的bitmap
         if (mCLBitmap != null && !mCLBitmap.isRecycled()) {
             mCLBitmap.recycle();
         }
-
+        //销毁地图
         mBaiduMapView.onDestroy();
 
         DemoApplication.getApplication().getJobManager().clear();
@@ -160,9 +168,10 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
         //为什么从这里读？这里读出来的size统一
         Bitmap bitmap = CommonUtil.getImageFromAssetsFile(DemoApplication.getApplication(), "current_location.png");
 
-        float scale = 0.72f;
+        //调整当前位置图片的显示
+        float scale = 0.80f;
         Matrix matrix = new Matrix();
-        matrix.postScale(scale, scale); //长和宽放大缩小的比例
+        matrix.postScale(scale, scale);
         mCLBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 
         bitmap.recycle();
@@ -178,27 +187,29 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
      */
     private void initDefaultLocation() {
 
+        //珠海经纬度
         double llat = 22.276012;
 
         double llng = 113.583087;
 
+        //显示上方位置的builder
         MyLocationData locData = new MyLocationData.Builder()
                 .accuracy(0)
                 .direction(0).latitude(llat)
                 .longitude(llng).build();
 
+        //显示上方位置-珠海
         mBaiduMap.setMyLocationData(locData);
 
-        mCurrentLatLng = new LatLng(llng, llat);
-
-        //显示等级-转换,初始化为mDefaultRadius半径的大小
+        //显示等级-转换：初始化为mDefaultRadius半径的层级用于显示
         float level = LocationLevelUtils.returnCurZoom(mDefaultRadius);
 
+        //当前地图状态
         mCurrentMapStatus = new MapStatus.Builder().target(new LatLng(llat, llng)).zoom(level).build();
-        // 定义点聚合管理类ClusterManager
+
         mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(mCurrentMapStatus));
 
-
+        //初始化数据搜索model
         mSearchModel = new SearchModel();
         mSearchModel.setGps(llng + "," + llat);
         mSearchModel.setRadius(mDefaultRadius);
@@ -208,25 +219,26 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
 
     }
 
-
+    //刷新
     protected void loading() {
         mIsLoading = true;
         hideLoading();
     }
 
-
+    //隐藏
     protected void hideLoading() {
         refresh.setVisibility(View.GONE);
         mIsLoading = false;
     }
 
+    //显示
     protected void showLoading() {
         refresh.setVisibility(View.VISIBLE);
         mIsLoading = false;
 
     }
 
-
+    //计算刷新的index
     protected void PageIndex() {
         if (mIndex >= mMaxPageSize) {
             mIndex = 0;

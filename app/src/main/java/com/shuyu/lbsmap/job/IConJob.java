@@ -27,8 +27,6 @@ import static com.shuyu.lbsmap.utils.FileUtils.getLogoNamePath;
 
 public class IConJob extends Job {
 
-    private final static String TAG = "IConJob";
-
     private List<IconModel> logoUrlList = new ArrayList<>();
     private Handler handler;
     private int size = 0;
@@ -55,7 +53,7 @@ public class IConJob extends Job {
             public void run() {
                 if (logoUrlList != null && logoUrlList.size() > 0) {
                     DefaultClusterRenderer.LOADING_LOGO = true;
-                    downloadFile(logoUrlList.get(size));
+                    downloadIcon(logoUrlList.get(size));
                 }
             }
         });
@@ -72,7 +70,12 @@ public class IConJob extends Job {
         return false;
     }
 
-    public void downloadFile(final IconModel iconModel) {
+
+    /**
+     * 下载图标
+     */
+    private void downloadIcon(final IconModel iconModel) {
+        //先保存为临时的，成功了在改名字
         final String name = getLogoNamePath(iconModel.getUrl()) + "tmp";
         File saveFile = new File(name);
         HttpRequest.download(iconModel.getUrl(), saveFile, new FileDownloadCallback() {
@@ -80,28 +83,30 @@ public class IConJob extends Job {
             public void onDone() {
                 super.onDone();
                 Point point = getBitmapSize();
-                transImage(name, name.replace("tmp", ""), point.x, point.y);
-
+                changeIconToSuccess(name, name.replace("tmp", ""), point.x, point.y);
+                //通知更新
                 IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
                 iconEvent.seteId(iconModel.getId());
                 DemoApplication.getApplication().getEventBus().post(iconEvent);
-
-                resolveDownLoad();
+                //继续看后面还有没有需要下载的
+                DownLoadNext();
             }
 
             @Override
             public void onFailure() {
                 super.onFailure();
+                //失败了删除文件
                 File file = new File(name);
                 if (file.exists()) {
                     file.delete();
                 }
-                resolveDownLoad();
+                DownLoadNext();
             }
         });
     }
 
-    private void resolveDownLoad() {
+
+    private void DownLoadNext() {
         size += 1;
         if (size >= (logoUrlList.size() - 1)) {
             DefaultClusterRenderer.LOADING_LOGO = false;
@@ -111,14 +116,14 @@ public class IConJob extends Job {
             String url = logoUrlList.get(size).getUrl();
             final String name = getLogoNamePath(url);
             if (!new File(name).exists()) {
-                downloadFile(logoUrlList.get(size));
+                downloadIcon(logoUrlList.get(size));
             } else {
-                resolveDownLoad();
+                DownLoadNext();
             }
         }
     }
 
-    public void transImage(String fromFile, String toFile, int width, int height) {
+    private void changeIconToSuccess(String fromFile, String toFile, int width, int height) {
         try {
             Bitmap bitmap = BitmapFactory.decodeFile(fromFile);
             if (bitmap == null) {

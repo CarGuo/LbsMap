@@ -13,40 +13,49 @@ import com.shuyu.lbsmap.model.LBSModel;
 
 import java.io.File;
 
+/**
+ * 百度地图上一个一个的item
+ */
 public class ClusterBaiduItem implements ClusterItem {
 
 
-    private int bitmapId = -1;
-
-    private boolean isLocation = false;
-
+    //经纬度
     private LatLng mPosition;
 
+    //对应的网络数据
     private LBSModel mLBAModel;
 
-    private String itemAddress;
-    private String localClusterPath;
-    private String localSinglePath;
-    private String unLocalSinalePath;
-    private String icon_url;
-    private String icon_un_url;
+    //当前这个item的地址
+    private String markerAddress;
+
+    //聚合marker本地路径
+    private String urlClusterPath;
+
+    //当个marker本地路径
+    private String urlMarkerPath;
+
+    //marker的url
+    private String markerUrl;
+
+    //默认的marker图标
+    private int mBitmapId = -1;
 
     @Override
     public String getUrlLocalMarkerIconPath() {
-        return localSinglePath;
+        return urlMarkerPath;
     }
 
-    public void setLocalSinglePath(String localSinglePath) {
-        this.localSinglePath = localSinglePath;
+    public void setUrlMarkerPath(String urlMarkerPath) {
+        this.urlMarkerPath = urlMarkerPath;
     }
 
     @Override
     public String getUrlClusterIconPath() {
-        return localClusterPath;
+        return urlClusterPath;
     }
 
-    public void setLocalClusterPath(String localClusterPath) {
-        this.localClusterPath = localClusterPath;
+    public void setUrlClusterPath(String urlClusterPath) {
+        this.urlClusterPath = urlClusterPath;
     }
 
     @Override
@@ -57,9 +66,9 @@ public class ClusterBaiduItem implements ClusterItem {
 
     @Override
     public BitmapDescriptor getBitmapDescriptor() {
-        if (bitmapId != -1) {
+        if (mBitmapId != -1) {
             return BitmapDescriptorFactory
-                    .fromResource(bitmapId);
+                    .fromResource(mBitmapId);
         }
 
         return BitmapDescriptorFactory
@@ -68,17 +77,17 @@ public class ClusterBaiduItem implements ClusterItem {
 
     @Override
     public BitmapDescriptor getUrlClusterIconBitmapDescriptor() {
-        if (!TextUtils.isEmpty(localClusterPath)) {
-            Bitmap var1 = BitmapFactory.decodeFile(localClusterPath);
+        if (!TextUtils.isEmpty(urlClusterPath)) {
+            Bitmap var1 = BitmapFactory.decodeFile(urlClusterPath);
             if (var1 == null) {
                 if (!DefaultClusterRenderer.LOADING_LOGO)
-                    deleteFile(localClusterPath);
+                    deleteFile(urlClusterPath);
                 return null;
             } else {
                 var1.recycle();
             }
             return BitmapDescriptorFactory
-                    .fromPath(localClusterPath);
+                    .fromPath(urlClusterPath);
 
         }
 
@@ -87,17 +96,17 @@ public class ClusterBaiduItem implements ClusterItem {
 
     @Override
     public BitmapDescriptor getUrlMarkerIconBitmapDescriptor() {
-        if (!TextUtils.isEmpty(localSinglePath)) {
-            Bitmap var1 = BitmapFactory.decodeFile(localSinglePath);
+        if (!TextUtils.isEmpty(urlMarkerPath)) {
+            Bitmap var1 = BitmapFactory.decodeFile(urlMarkerPath);
             if (var1 == null) {
                 if (!DefaultClusterRenderer.LOADING_LOGO)
-                    deleteFile(localSinglePath);
+                    deleteFile(urlMarkerPath);
                 return null;
             } else {
                 var1.recycle();
             }
             return BitmapDescriptorFactory
-                    .fromPath(localSinglePath);
+                    .fromPath(urlMarkerPath);
         }
 
         return null;
@@ -115,12 +124,12 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
 
-    public String getItemAddress() {
-        return itemAddress;
+    public String getMarkerAddress() {
+        return markerAddress;
     }
 
-    public void setItemAddress(String itemAddress) {
-        this.itemAddress = itemAddress;
+    public void setMarkerAddress(String markerAddress) {
+        this.markerAddress = markerAddress;
     }
 
     public ClusterBaiduItem(LatLng latLng) {
@@ -128,23 +137,15 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
     public void setBitmapId(int bitmapId) {
-        this.bitmapId = bitmapId;
+        this.mBitmapId = bitmapId;
     }
 
-    public boolean isLocation() {
-        return isLocation;
+    public String getMarkerUrl() {
+        return markerUrl;
     }
 
-    public void setIsLocation(boolean isLocation) {
-        this.isLocation = isLocation;
-    }
-
-    public String getIcon_url() {
-        return icon_url;
-    }
-
-    public void setIcon_url(String icon_url) {
-        this.icon_url = icon_url;
+    public void setMarkerUrl(String markerUrl) {
+        this.markerUrl = markerUrl;
     }
 
     public LBSModel getLBAModel() {

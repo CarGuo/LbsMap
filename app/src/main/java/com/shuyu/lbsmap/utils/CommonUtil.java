@@ -56,79 +56,49 @@ public class CommonUtil {
     }
 
 
-    private Bitmap resolveSize(String imgPath) {
-
-        BitmapFactory.Options newOpts = new BitmapFactory.Options();
-        // 开始读入图片，此时把options.inJustDecodeBounds 设回true，即只读边不读内容
-        newOpts.inJustDecodeBounds = true;
-        newOpts.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        // Get bitmap info, but notice that bitmap is null now
-        BitmapFactory.decodeFile(imgPath, newOpts);
-        Point point = CommonUtil.getBitmapSize();
-        int pixelW = (int) point.x;
-        int pixelH = (int) point.y;
-
-        newOpts.inJustDecodeBounds = false;
-        int w = newOpts.outWidth;
-        int h = newOpts.outHeight;
-        // 缩放比。由于是固定比例缩放，只用高或者宽其中一个数据进行计算即可
-        int be = 1;//be=1表示不缩放
-        if (w > h && w > pixelW) {//如果宽度大的话根据宽度固定大小缩放
-            be = (newOpts.outWidth / pixelW);
-        } else if (h > pixelH) {//如果高度高的话根据宽度固定大小缩放
-            be = (newOpts.outHeight / pixelH);
-        }
-        if (be <= 0) be = 1;
-        newOpts.inSampleSize = be;//设置缩放比例
-        // 开始压缩图片，注意此时已经把options.inJustDecodeBounds 设回false了
-        return BitmapFactory.decodeFile(imgPath, newOpts);
-    }
-
-
-    public static Map<String, String> resolveUrlMap( SearchModel searchModel, int index, int pageSize) {
-        Map<String, String> urlMap = new LinkedHashMap<String, String>();
+    /**
+     * 组装一个map用于url显示
+     */
+    public static Map<String, String> inputMapForUrl(SearchModel searchModel, int index, int pageSize) {
+        Map<String, String> map = new LinkedHashMap<String, String>();
 
         //ak
-        urlMap.put("ak", DemoApplication.AK());
+        map.put("ak", DemoApplication.AK());
 
         //表名
-        urlMap.put("geotable_id", "" + searchModel.getTableId());
+        map.put("geotable_id", "" + searchModel.getTableId());
 
         //第几页
-        urlMap.put("page_index", "" + index);
+        map.put("page_index", "" + index);
 
         //每页数量
-        urlMap.put("page_size", "" + pageSize);
+        map.put("page_size", "" + pageSize);
 
-        urlMap.put("location", "" + searchModel.getGps());
+        //经纬度
+        map.put("location", "" + searchModel.getGps());
 
         //半径
-        urlMap.put("radius", "" + searchModel.getRadius());
+        map.put("radius", "" + searchModel.getRadius());
 
-        //关键字q，标签tag，排序sort，过滤等
+        //还可以有关键字q，标签tag，排序sort，过滤等
 
-        return urlMap;
+        return map;
     }
 
-
     /**
-     * 计算sn跟参数对出现顺序有关，所以用LinkedHashMap保存<key,value>，此方法适用于get请求，
-     * 如果是为发送post请求的url生成签名，请保证参数对按照key的字母顺序依次放入Map.
-     * 以get请求为例：http://api.map.baidu.com/geocoder/v2/?address=百度大厦&output=json&ak=yourak，
-     * paramsMap中先放入address，再放output，然后放ak，放入顺序必须跟get请求中对应参数的出现顺序保持一致。
+     * 签名，一般服务端做的，因为请求数据一般也是服务端请求后交给客户端的
      */
-    public static String SignSN(String head, Map map) {
+    public static String SNLogic(String requestHeader, Map map) {
         try {
-            String paramsStr = toQueryString(map);
+            String contentUrl = toSNString(map);
 
-            String wholeStr = new String(head + paramsStr + SK());
+            String wholeStr = new String(requestHeader + contentUrl + SK());
 
-            // 对上面wholeStr再作utf8编码
+            //utf8编码
             String tempStr = URLEncoder.encode(wholeStr, "UTF-8");
 
             String sn = MD5(tempStr);
 
-            //Debuger.printfError(sn);
             return sn;
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -136,15 +106,13 @@ public class CommonUtil {
         return "";
     }
 
-    /**
-     * 针对location参数的改进的utf8中文转换
-     */
-    public static String toQueryString(Map<?, ?> data)
+
+    private static String toSNString(Map<?, ?> data)
             throws UnsupportedEncodingException {
         StringBuffer queryString = new StringBuffer();
         for (Map.Entry<?, ?> pair : data.entrySet()) {
             queryString.append(pair.getKey() + "=");
-            if (pair.getKey().equals("region") || pair.getKey().equals("tags")) {
+            if (pair.getKey().equals("tags")) {
                 String ss[] = pair.getValue().toString().split(",");
                 //针对Tag中的/
                 if (ss.length > 1) {
@@ -228,6 +196,10 @@ public class CommonUtil {
         return null;
     }
 
+
+    /**
+     * 将map转为url
+     */
     public static String MapToUrl(Map<?, ?> data) {
         StringBuffer queryString = new StringBuffer();
         for (Map.Entry<?, ?> pair : data.entrySet()) {
@@ -239,6 +211,7 @@ public class CommonUtil {
         }
         return queryString.toString();
     }
+
 
     /**
      * MD5加密

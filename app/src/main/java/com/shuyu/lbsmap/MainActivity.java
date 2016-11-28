@@ -27,7 +27,7 @@ import java.util.UUID;
 
 public class MainActivity extends BaseActivity {
 
-    boolean mNeedRequest = false; //初始化时是否需要请求数据
+    boolean mHadRequest = false;
 
     //城市是否改变
     boolean mIsChangeCity;
@@ -35,16 +35,18 @@ public class MainActivity extends BaseActivity {
     //是否移动
     boolean mIsMove;
 
+    //所有的数量
     int mTotalCount;
 
     Handler mHandler = new Handler();
 
+    //网络请求的线程
     NetRunnable mNetRunnable;
 
+    //图标的item
     List<ClusterBaiduItem> mClusterBaiduItems = new ArrayList<>();
 
-    ClusterBaiduItem mClickItem;
-
+    //lbs数据列表
     List<LBSModel> mDataList = new ArrayList<>();
 
     @Override
@@ -54,22 +56,23 @@ public class MainActivity extends BaseActivity {
         initListeners();
 
         showLoadingDialog();
-
-        FingerRequestLogic(false, false);
+        //初始化请求数据
+        RequestNewDataLogic(false, false);
     }
 
     @Override
     protected void loading() {
         super.loading();
-        FingerRequestLogic(false, false);
+        //点击loading请求数据
+        RequestNewDataLogic(false, false);
     }
 
     protected void initListeners() {
 
-        //移动，方式，经纬度变化
+        //地图状态发生变化，主要是移动、放大、经纬度发生变化
         mClusterManager.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
 
-            //记录上一个状态
+            //记住变化前的上一个状态
             private MapStatus mFrontMapStatus;
 
             @Override
@@ -85,14 +88,9 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
-                //如果首次会出现切换城市的话
-                if (mNeedRequest) {
-                    mNeedRequest = false;
-                    showLoadingDialog();
-                    netDataLogic(true);
-                    mFrontMapStatus = null;
-                } else {
-                    if (ScaleAndMoveLogic(mFrontMapStatus, mapStatus)) {//处理移动与放大
+                //此处需要注意，如果是进入的时候重新定位了地址，或者进入后在改变地图状态，可能也会进入这里
+                if (mHadRequest) {
+                    if (StatusChangeLogic(mFrontMapStatus, mapStatus)) {//处理移动与放大
                         mFrontMapStatus = null;
                     }
                 }
@@ -100,10 +98,11 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        //将百度的图标点击转为marker的点击
         mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                //传入点击的marker
+                //通过这里转到mClusterManager
                 return mMarkerManager.onMarkerClick(marker);
             }
         });
@@ -112,7 +111,6 @@ public class MainActivity extends BaseActivity {
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterBaiduItem>() {
             @Override
             public boolean onClusterItemClick(ClusterBaiduItem item) {
-                mClickItem = item;
                 Toast.makeText(MainActivity.this, item.getLBAModel().getTitle(), Toast.LENGTH_SHORT).show();
                 return true;
             }
@@ -122,7 +120,7 @@ public class MainActivity extends BaseActivity {
         mClusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<ClusterBaiduItem>() {
             @Override
             public boolean onClusterClick(Cluster<ClusterBaiduItem> cluster) {
-                Toast.makeText(MainActivity.this, "聚合列表：" + cluster.getSize(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "聚合图标：" + cluster.getSize(), Toast.LENGTH_SHORT).show();
                 return true;
             }
         });
@@ -131,69 +129,74 @@ public class MainActivity extends BaseActivity {
 
 
     /**
-     * 地图的手势逻辑
+     * 地图因为操作而发生了状态改变
      */
-    private boolean ScaleAndMoveLogic(MapStatus frontMapStatus, MapStatus mapStatus) {
-
+    private boolean StatusChangeLogic(MapStatus frontMapStatus, MapStatus mapStatus) {
+        //重新确定搜索半径的中心图标
         mSearchModel.setGps(mapStatus.bound.getCenter().longitude + "," + mapStatus.bound.getCenter().latitude);
-
+        //重新确定层级
         mSearchModel.setLevel(mapStatus.zoom);
 
         if (frontMapStatus == null)
             return false;
 
-        //屏幕实际 X/米
+        //得到屏幕的距离大小
         double areaLength1 = DistanceUtil.getDistance(mapStatus.bound.northeast, mapStatus.bound.southwest);
 
-        //半径
-        int radius = (int) areaLength1 / 2;//将半径坐标存入到筛选器
+        //计算屏幕的大小半径
+        int radius = (int) areaLength1 / 2;
 
+        //重新确定搜索的半径
         mSearchModel.setRadius(radius);
 
-        //是否放大缩小
+
         if (frontMapStatus.zoom == mapStatus.zoom) {
             if (frontMapStatus.bound == null)
                 return false;
-            //移动距离
+            //如果是移动了，得到距离
             double moveLenght = DistanceUtil.getDistance(frontMapStatus.bound.getCenter(), mapStatus.bound.getCenter());
-            //如果大于等于半径
-            if (moveLenght >= radius / 2) {
-                FingerRequestLogic(true, true);
+            //如果移动距离大于屏幕的检索半径，请求数据
+            if (moveLenght >= radius) {
+                RequestNewDataLogic(true, true);
                 return true;
             }
 
-            //如果经纬度发生变化了
+            //如果经纬度发生变化了，一般都是切换的城市之类的
             if (mChangeStatus != null && (mapStatus.target.latitude) != (int) (mChangeStatus.target.latitude)
                     && (int) (mapStatus.target.longitude) != (int) (mChangeStatus.target.longitude) && mIsChangeCity) {
-                FingerRequestLogic(true, true);
+                RequestNewDataLogic(true, true);
                 mIsChangeCity = false;
                 return true;
             }
 
             return false;
-        } else {//处理放大缩小
-            FingerRequestLogic(true, true);
+        } else {
+            //如果是缩放的话，地图层级发生改变，重新请求数据
+            RequestNewDataLogic(true, true);
             return true;
         }
     }
 
     /**
-     * 开始因为status变化而产生的请求
+     * 请求新数据的逻辑
      */
-    private void FingerRequestLogic(final boolean hideLoadBtn, final boolean isClearStatus) {
+    private void RequestNewDataLogic(final boolean hideFreshBtn, final boolean clearMap) {
 
-        if (hideLoadBtn) {
+        //移动或者缩放之类的产生新的数据请求的时候，需要隐藏掉按键，避免冲突
+        if (hideFreshBtn) {
             hideLoading();
         }
 
+        //取消掉原本的请求
         if (mHandler != null && mNetRunnable != null)
             mHandler.removeCallbacks(mNetRunnable);
 
+        //标志位已经移动了
         mIsMove = true;
 
-        mNetRunnable = new NetRunnable(isClearStatus);
-
-        mHandler.postDelayed(mNetRunnable, 1500);
+        mNetRunnable = new NetRunnable(clearMap);
+        //等待确定请求逻辑
+        mHandler.postDelayed(mNetRunnable, 1300);
 
     }
 
@@ -201,69 +204,84 @@ public class MainActivity extends BaseActivity {
      * 请求数据
      */
     private void netDataLogic(boolean isClearStatus) {
+        //是否清除掉地图上已经有的
         clearStatus(isClearStatus);
+        //请求当前数据是第几页
         requestData(mIndex);
     }
 
+    /**
+     * 发起真正的请求
+     */
     private void requestData(int pageIndex) {
         DemoApplication.getApplication().getJobManager().clear();
+        //这个UUID，用于判断当前回来的数据是否为最新请求的数据
         mUUID = UUID.randomUUID().toString();
+        //将请求的JOB发布，请求数据，组装数据并返回。
         DemoApplication.getApplication().getJobManager().addJob(new RequestLogicJob(mSearchModel, pageIndex, mUUID));
 
     }
 
     /**
-     * 显示地图ICON
+     * 显示地图ICON marker
      */
-    private void showMapData(List<LBSModel> dataList, List<ClusterBaiduItem> clusterList, int lastSize, int totalCount) {
+    private void showMapData(List<LBSModel> dataList, List<ClusterBaiduItem> clusterList, int totalCount) {
+        //总数
         mTotalCount = totalCount;
-
+        //lbs数据列表
         mDataList = dataList;
-
+        //组装好的百度item
         mClusterBaiduItems = clusterList;
-
+        //计算有多少页，这里不保险，因为有时候一页不一定是你需要的数量
         int page = (int) Math.ceil(((float) totalCount / DemoApplication.PAGE_SIZE)) - 1;
-
+        //最大页数
         mMaxPageSize = (page >= 0) ? page : 0;
 
         if (mTotalCount == 0 && (mDataList == null || mDataList.size() == 0)) {
             mIndex = 0;
         }
-
+        //清除聚合管理器数据
         mClusterManager.clearItems();
-
+        //重新加入聚合管理器数据
         mClusterManager.addItems(mClusterBaiduItems);
 
         mBaiduMap.clear();
 
-        //定义点聚合管理类ClusterManager
+        //更新状态
         if (mBaiduMap != null && mCurrentMapStatus != null)
             mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(mCurrentMapStatus));
-
+        //更新页面
         if (mClusterManager != null)
             mClusterManager.cluster();
 
+        //下载网络icon
         DownLoadIcons(mClusterBaiduItems);
 
+        //显示刷新按键
         showLoading();
 
         dismissLoadingDialog();
 
     }
 
+    /**
+     * 下载lbs数据中对应的icon作为marker
+     */
     public static void DownLoadIcons(List<ClusterBaiduItem> clusterBaiduItems) {
         if (clusterBaiduItems == null || clusterBaiduItems.size() == 0)
             return;
         List<IconModel> logoUrl = new ArrayList<>();
         for (int i = 0; i < clusterBaiduItems.size(); i++) {
             ClusterBaiduItem clusterBaiduItem = clusterBaiduItems.get(i);
-            if (!TextUtils.isEmpty(clusterBaiduItem.getIcon_url()) && !new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
+            //将所有没有下载的market拿出来
+            if (!TextUtils.isEmpty(clusterBaiduItem.getMarkerUrl()) && !new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
                 IconModel iconModel = new IconModel();
-                iconModel.setUrl(clusterBaiduItem.getIcon_url());
+                iconModel.setUrl(clusterBaiduItem.getMarkerUrl());
                 iconModel.setId(clusterBaiduItem.getLBAModel().getGeotable_id());
                 logoUrl.add(iconModel);
             }
         }
+        //执行下载图标的job
         if (logoUrl.size() > 0) {
             IConJob iConJob = new IConJob(logoUrl);
             DemoApplication.getApplication().getJobManager().addJob(iConJob);
@@ -271,10 +289,13 @@ public class MainActivity extends BaseActivity {
     }
 
 
+    /**
+     * 下载的图标发生了改变
+     */
     private void ChangeIconLogic(IconEvent e) {
         for (ClusterBaiduItem clusterBaiduItem : mClusterBaiduItems) {
             LBSModel lbsModel = clusterBaiduItem.getLBAModel();
-            //此处根据id设置图片
+            //此处根据id设置对应的图片
             if (lbsModel.getGeotable_id() == e.geteId()) {
                 BitmapDescriptor bitmapDescriptor;
                 if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) && new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
@@ -290,6 +311,7 @@ public class MainActivity extends BaseActivity {
                 if (marker != null) {
                     marker.setIcon(bitmapDescriptor);
                 }
+                //刷新
                 mClusterManager.cluster();
                 return;
             }
@@ -299,7 +321,7 @@ public class MainActivity extends BaseActivity {
 
 
     /**
-     * 清除请求状态
+     * 清除各种状态
      */
     protected void clearStatus(boolean isClearPageIndex) {
         mBaiduMap.clear();
@@ -311,11 +333,15 @@ public class MainActivity extends BaseActivity {
     }
 
 
+    /**
+     * 请求数据对应的返回
+     */
     public void onEventMainThread(RequestDataEvent e) {
 
         if (e.getEventType() == RequestDataEvent.SUCCESS) {
+            //成功，是最新的请求
             if (mUUID.equals(e.getUUID())) {
-                showMapData(e.getDataList(), e.getClusterBaiduItems(), e.getLastSize(), e.getTotalSize());
+                showMapData(e.getDataList(), e.getClusterBaiduItems(), e.getTotalSize());
             }
         } else if (e.getEventType() == RequestDataEvent.DEFAULT) {
 
@@ -331,12 +357,16 @@ public class MainActivity extends BaseActivity {
     }
 
     /**
-     * 下载完图片或者领取了红包
+     * 下载完图片完成
      */
     public void onEventMainThread(IconEvent e) {
         ChangeIconLogic(e);
     }
 
+
+    /**
+     * 网络请求执行逻辑
+     */
     private class NetRunnable implements Runnable {
 
         private boolean isClearStatus;
