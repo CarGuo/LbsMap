@@ -104,11 +104,14 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
         if (mCLBitmap != null && !mCLBitmap.isRecycled()) {
             mCLBitmap.recycle();
         }
+
+        mClusterManager.clearItems();
+
+        mBaiduMap.clear();
         //销毁地图
         mBaiduMapView.onDestroy();
 
         DemoApplication.getApplication().getJobManager().clear();
-        DemoApplication.getApplication().getJobManager().stop();
 
         dismissLoadingDialog();
     }
