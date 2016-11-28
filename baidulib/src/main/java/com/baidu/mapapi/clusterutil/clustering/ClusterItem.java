@@ -10,6 +10,7 @@ import com.baidu.mapapi.model.LatLng;
 
 /**
  * ClusterItem represents a marker on the map.
+ * add myself 增加了自定义接口
  */
 public interface ClusterItem {
 
@@ -20,12 +21,12 @@ public interface ClusterItem {
 
     BitmapDescriptor getBitmapDescriptor();
 
-    BitmapDescriptor getLocalClusterBitmapDescriptor();
+    BitmapDescriptor getUrlClusterIconBitmapDescriptor();
 
-    BitmapDescriptor getLocalSingleBitmapDescriptor();
+    BitmapDescriptor getUrlMarkerIconBitmapDescriptor();
 
-    String getLocalSinglePath();
+    String getUrlLocalMarkerIconPath();
 
-    String getLocalClusterPath();
+    String getUrlClusterIconPath();
 
 }

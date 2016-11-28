@@ -32,7 +32,7 @@ public class ClusterBaiduItem implements ClusterItem {
     private String icon_un_url;
 
     @Override
-    public String getLocalSinglePath() {
+    public String getUrlLocalMarkerIconPath() {
         return localSinglePath;
     }
 
@@ -41,7 +41,7 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
     @Override
-    public String getLocalClusterPath() {
+    public String getUrlClusterIconPath() {
         return localClusterPath;
     }
 
@@ -67,7 +67,7 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
     @Override
-    public BitmapDescriptor getLocalClusterBitmapDescriptor() {
+    public BitmapDescriptor getUrlClusterIconBitmapDescriptor() {
         if (!TextUtils.isEmpty(localClusterPath)) {
             Bitmap var1 = BitmapFactory.decodeFile(localClusterPath);
             if (var1 == null) {
@@ -86,7 +86,7 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
     @Override
-    public BitmapDescriptor getLocalSingleBitmapDescriptor() {
+    public BitmapDescriptor getUrlMarkerIconBitmapDescriptor() {
         if (!TextUtils.isEmpty(localSinglePath)) {
             Bitmap var1 = BitmapFactory.decodeFile(localSinglePath);
             if (var1 == null) {

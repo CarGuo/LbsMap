@@ -35,6 +35,8 @@ import java.util.Set;
  * Clusters have the center of the first element (not the centroid of the items within it).
  */
 public class NonHierarchicalDistanceBasedAlgorithm<T extends ClusterItem> implements Algorithm<T> {
+
+    //add myself 多大距离用于聚合距离
     public static final int MAX_DISTANCE_AT_ZOOM = 200; // essentially 100 dp.
 
     /**

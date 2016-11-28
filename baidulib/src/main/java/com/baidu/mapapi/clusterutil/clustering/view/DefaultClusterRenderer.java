@@ -11,9 +11,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -73,17 +71,21 @@ import static com.baidu.mapapi.clusterutil.clustering.algo.NonHierarchicalDistan
 public class DefaultClusterRenderer<T extends ClusterItem> implements
         com.baidu.mapapi.clusterutil.clustering.view.ClusterRenderer<T> {
     private static final boolean SHOULD_ANIMATE = false;
-    public static  boolean LOADING_LOGO = false;
+    public static boolean LOADING_LOGO = false;
     private final BaiduMap mMap;
     private final IconGenerator mIconGenerator;
     private final ClusterManager<T> mClusterManager;
     private final float mDensity;
 
+    /**
+     * add myself
+     */
+    //修改了显示的等级
     private static final int[] BUCKETS = {10, 20, 50, 100, 200, 500, 1000};
     // 外部矩形弧度
-    float[] outerR = new float[]{12, 12, 12, 12, 12, 12, 12, 12};
+    float[] mOuterCircle = new float[]{12, 12, 12, 12, 12, 12, 12, 12};
     // 内部矩形与外部矩形的距离
-    RectF inset = new RectF(0, 0, 0, 0);
+    RectF mInsertCircle = new RectF(0, 0, 0, 0);
     // 内部矩形弧度
     float[] innerRadii = new float[]{0, 0, 0, 0, 0, 0, 0, 0};
     private BitmapDrawable mColoredCircleBackground;
@@ -106,8 +108,9 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
 
     /**
      * If cluster size is less than this size, display individual markers.
+     * add myself
      */
-    private static final int MIN_CLUSTER_SIZE = 1;
+    private static final int MIN_CLUSTER_SIZE = 1;//最小聚合个数
 
     /**
      * The currently displayed set of clusters.
@@ -137,10 +140,14 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         this.context = context;
         mMap = map;
         mDensity = context.getResources().getDisplayMetrics().density;
+
+        //add myself 修改了图标渲染器
         mIconGenerator = new IconGenerator(context, mDensity);
+        //设置显示样本
         mIconGenerator.setContentView(makeSquareTextView(context));
+        //图标中文字的显示样式
         mIconGenerator.setTextAppearance(R.style.ClusterIcon_TextAppearance);
-        mIconGenerator.setBackground(makeClusterBackground(null));
+        mIconGenerator.setBackground(makeClusterBackground());
         mClusterManager = clusterManager;
     }
 
@@ -169,20 +176,29 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         mClusterManager.getClusterMarkerCollection().setOnMarkerClickListener(null);
     }
 
-    private LayerDrawable makeClusterBackground(ClusterItem clusterItem) {
-        //通过openRawResource获取一个inputStream对象,判断聚合用什么图片
+    /**
+     * add myself
+     * 设置默认的聚合图标
+     */
+    private LayerDrawable makeClusterBackground() {
+        //读取聚合图标
         InputStream inputStream;
         inputStream = context.getResources().openRawResource(R.raw.cluster);
         BitmapDrawable drawable = new BitmapDrawable(inputStream);
         mColoredCircleBackground = drawable;
-        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(outerR, inset, null));
-        outline.getPaint().setColor(0x00ffffff); // Transparent white.
+        //将外部的圈圈去掉
+        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(mOuterCircle, mInsertCircle, null));
+        outline.getPaint().setColor(0x00000000);
         LayerDrawable background = new LayerDrawable(new Drawable[]{outline, mColoredCircleBackground});
         int strokeWidth = (int) (mDensity * 3);
         background.setLayerInset(1, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
         return background;
     }
 
+    /**
+     * add myself
+     * 设置文本的样式,修改为使用了TextView，不用SquareTextView
+     */
     private TextView makeSquareTextView(Context context) {
         TextView squareTextView =
                 new TextView(context);
@@ -193,6 +209,10 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         return squareTextView;
     }
 
+    /**
+     * add myself
+     * 设置文本的数字显示
+     */
     protected String getClusterText(int bucket) {
         if (bucket < BUCKETS[0]) {
             return String.valueOf(bucket);
@@ -702,21 +722,26 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
         }
     }
 
-    private LayerDrawable makeLocalClusterBackground(ClusterItem clusterItem) {
+    /**
+     * add myself
+     * 如果需要替换集合的图标，那么用这个方法
+     */
+    private LayerDrawable makeClusterBackgroundByUrlPath(ClusterItem clusterItem) {
 
-        BitmapDrawable drawable = new BitmapDrawable(clusterItem.getLocalClusterPath());
+        BitmapDrawable drawable = new BitmapDrawable(clusterItem.getUrlClusterIconPath());
         if (drawable.getBitmap() == null) {
-            File file = new File(clusterItem.getLocalClusterPath());
+            //拿到本地的图片，如果本地路径的图片有问题，那么就删除
+            File file = new File(clusterItem.getUrlClusterIconPath());
             try {
                 if (!DefaultClusterRenderer.LOADING_LOGO)
                     file.delete();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return makeClusterBackground(clusterItem);
+            return makeClusterBackground();
         }
         mColoredCircleBackground = drawable;
-        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(outerR, inset, null));
+        ShapeDrawable outline = new ShapeDrawable(new RoundRectShape(mOuterCircle, mInsertCircle, null));
         outline.getPaint().setColor(0x00ffffff); // Transparent white.
         LayerDrawable background = new LayerDrawable(new Drawable[]{outline, mColoredCircleBackground});
         int strokeWidth = (int) (mDensity * 3);
@@ -743,12 +768,13 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
             clusterItem = item;
             break;
         }
-
-        if (clusterItem != null && !TextUtils.isEmpty(clusterItem.getLocalClusterPath()) && new File(clusterItem.getLocalClusterPath()).exists()) {
+        //add myself
+        //如果本地有需要显示的聚合图标，就换为本地聚合图标
+        if (clusterItem != null && !TextUtils.isEmpty(clusterItem.getUrlClusterIconPath()) && new File(clusterItem.getUrlClusterIconPath()).exists()) {
             mIconGenerator.setBackground(
-                    makeLocalClusterBackground(clusterItem));
+                    makeClusterBackgroundByUrlPath(clusterItem));
         } else {
-            mIconGenerator.setBackground(makeClusterBackground(clusterItem));
+            mIconGenerator.setBackground(makeClusterBackground());
         }
         //change
         BitmapDescriptor descriptor = mIcons.get(bucket);
@@ -841,9 +867,13 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
                         MarkerOptions markerOptions = new MarkerOptions();
                         //markerOptions.animateType(MarkerOptions.MarkerAnimateType.grow);
 
+                        /**
+                         * add myself
+                         */
                         BitmapDescriptor bitmapDescriptor;
-                        if (!TextUtils.isEmpty(item.getLocalSinglePath()) && new File(item.getLocalSinglePath()).exists()) {
-                            bitmapDescriptor = item.getLocalSingleBitmapDescriptor();
+                        //如果有需要显示的url icon的话，就显示为已下载的url Icon
+                        if (!TextUtils.isEmpty(item.getUrlLocalMarkerIconPath()) && new File(item.getUrlLocalMarkerIconPath()).exists()) {
+                            bitmapDescriptor = item.getUrlMarkerIconBitmapDescriptor();
                             if (bitmapDescriptor == null) {
                                 bitmapDescriptor = item.getBitmapDescriptor();
                             }

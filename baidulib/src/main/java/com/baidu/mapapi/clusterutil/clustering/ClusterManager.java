@@ -165,7 +165,7 @@ public class ClusterManager<T extends ClusterItem> implements
         }
     }
 
-
+    //add myself 修改了地图状态变化的回调
     @Override
     public void onMapStatusChangeStart(MapStatus mapStatus) {
         if (onMapStatusChangeListener != null)
@@ -175,7 +175,7 @@ public class ClusterManager<T extends ClusterItem> implements
     @Override
     public void onMapStatusChange(MapStatus mapStatus) {
 
-
+        //add myself 修改了地图状态变化的回调
         if (onMapStatusChangeListener != null)
             onMapStatusChangeListener.onMapStatusChange(mapStatus);
 
@@ -195,7 +195,7 @@ public class ClusterManager<T extends ClusterItem> implements
 
     @Override
     public void onMapStatusChangeFinish(MapStatus mapStatus) {
-
+        //add myself 修改了地图状态变化的回调
         if (onMapStatusChangeListener != null)
             onMapStatusChangeListener.onMapStatusChangeFinish(mapStatus);
     }
@@ -289,16 +289,19 @@ public class ClusterManager<T extends ClusterItem> implements
         public void onClusterItemInfoWindowClick(T item);
     }
 
+    //add myself 修改了地图状态变化的回调
     public BaiduMap.OnMapStatusChangeListener onMapStatusChangeListener;
 
+    /**
+     * add myself
+     */
     public DefaultClusterRenderer<T> getDefaultClusterRenderer() {
-        return (DefaultClusterRenderer)mRenderer;
+        return (DefaultClusterRenderer) mRenderer;
     }
 
     public void setOnMapStatusChangeListener(BaiduMap.OnMapStatusChangeListener onMapStatusChangeListener) {
         this.onMapStatusChangeListener = onMapStatusChangeListener;
     }
-
 
 
 }

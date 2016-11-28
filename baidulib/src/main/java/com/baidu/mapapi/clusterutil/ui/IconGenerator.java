@@ -45,10 +45,12 @@ public class IconGenerator {
 
     /**
      * Creates a new IconGenerator with the default style.
+     * add myself
      */
     public IconGenerator(Context context, float density) {
         mContext = context;
         mContainer = (ViewGroup) LayoutInflater.from(mContext).inflate(R.layout.text_bubble, null);
+        //修改大小
         mRotationLayout = (RotationLayout) mContainer.getChildAt(0);
         mContentView = mTextView = (TextView) mRotationLayout.findViewById(R.id.text);
         mDensity = density;
@@ -57,7 +59,7 @@ public class IconGenerator {
 
     /**
      * Sets the text content, then creates an icon with the current style.
-     *
+     * 显示文本
      * @param text the text content to display inside the icon.
      */
     public Bitmap makeIcon(String text) {
@@ -73,11 +75,13 @@ public class IconGenerator {
      * <p/>
      * This method is useful if a custom view has previously been set, or if text content is not
      * applicable.
+     *
+     * add myself
      */
     public Bitmap makeIcon() {
         int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         mContainer.measure(measureSpec, measureSpec);
-
+        //修改大小为自己想要的
         int measuredWidth = (int) (54 * mDensity);
         int measuredHeight = (int) (54 * mDensity);
 
@@ -177,7 +181,7 @@ public class IconGenerator {
     /**
      * Sets the text color, size, style, hint color, and highlight color from the specified
      * <code>TextAppearance</code> resource.
-     *
+     * 设置显示文本样式
      * @param resid the identifier of the resource.
      */
     public void setTextAppearance(Context context, int resid) {
@@ -205,7 +209,7 @@ public class IconGenerator {
 
     /**
      * Set the background to a given Drawable, or remove the background.
-     *
+     * 设置背景颜色
      * @param background the Drawable to use as the background, or null to remove the background.
      */
     @SuppressWarnings("deprecation")
@@ -228,7 +232,8 @@ public class IconGenerator {
 
     /**
      * Set the background to a given Drawable, or remove the background.
-     *
+     * add myself
+     * 设置背景颜色
      * @param background the Drawable to use as the background, or null to remove the background.
      */
     @SuppressWarnings("deprecation")
