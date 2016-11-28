@@ -12,7 +12,7 @@ public class FileUtils {
 
     public static final String BIG_END = "big";
 
-    public static final int BIG_SIZE = 10;
+    public static final int BIG_SIZE = 12;
 
     public static String getLogoNamePath(String urlIcon) {
         return FileUtils.getAppPath() + "/" + CommonUtil.MD5L(urlIcon) + "_";

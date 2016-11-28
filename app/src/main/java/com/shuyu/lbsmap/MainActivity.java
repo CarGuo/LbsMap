@@ -13,6 +13,8 @@ import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.Overlay;
+import com.baidu.mapapi.model.LatLngBounds;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.shuyu.lbsmap.event.RequestDataEvent;
 import com.shuyu.lbsmap.event.IconEvent;
@@ -125,6 +127,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public boolean onClusterClick(Cluster<ClusterBaiduItem> cluster) {
                 Toast.makeText(MainActivity.this, "聚合图标：" + cluster.getSize(), Toast.LENGTH_SHORT).show();
+                ClusterOnClick(cluster);
                 return true;
             }
         });
@@ -369,6 +372,23 @@ public class MainActivity extends BaseActivity {
 
         }
         mPreClickItem = clusterBaiduItem;
+    }
+
+    /**
+     * 聚合点击
+     */
+    private void ClusterOnClick(Cluster <ClusterBaiduItem> clusterBaiduItems) {
+        if (mBaiduMap == null) {
+            return;
+        }
+        if (clusterBaiduItems.getItems().size() > 0) {
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (ClusterBaiduItem clusterBaiduItem : clusterBaiduItems.getItems()) {
+                builder.include(clusterBaiduItem.getPosition());
+            }
+            mBaiduMap.animateMapStatus(MapStatusUpdateFactory
+                    .newLatLngBounds(builder.build()));
+        }
     }
 
 
