@@ -23,7 +23,7 @@ public interface ClusterItem {
 
     BitmapDescriptor getUrlClusterIconBitmapDescriptor();
 
-    BitmapDescriptor getUrlMarkerIconBitmapDescriptor();
+    BitmapDescriptor getUrlMarkerIconBitmapDescriptor(boolean select);
 
     String getUrlLocalMarkerIconPath();
 

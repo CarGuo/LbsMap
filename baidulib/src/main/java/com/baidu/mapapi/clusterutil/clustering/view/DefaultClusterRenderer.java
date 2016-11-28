@@ -873,7 +873,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
                         BitmapDescriptor bitmapDescriptor;
                         //如果有需要显示的url icon的话，就显示为已下载的url Icon
                         if (!TextUtils.isEmpty(item.getUrlLocalMarkerIconPath()) && new File(item.getUrlLocalMarkerIconPath()).exists()) {
-                            bitmapDescriptor = item.getUrlMarkerIconBitmapDescriptor();
+                            bitmapDescriptor = item.getUrlMarkerIconBitmapDescriptor(false);
                             if (bitmapDescriptor == null) {
                                 bitmapDescriptor = item.getBitmapDescriptor();
                             }

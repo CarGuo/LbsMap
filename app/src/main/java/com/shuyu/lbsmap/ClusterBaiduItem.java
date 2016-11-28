@@ -13,6 +13,8 @@ import com.shuyu.lbsmap.model.LBSModel;
 
 import java.io.File;
 
+import static com.shuyu.lbsmap.utils.FileUtils.BIG_END;
+
 /**
  * 百度地图上一个一个的item
  */
@@ -95,20 +97,34 @@ public class ClusterBaiduItem implements ClusterItem {
     }
 
     @Override
-    public BitmapDescriptor getUrlMarkerIconBitmapDescriptor() {
-        if (!TextUtils.isEmpty(urlMarkerPath)) {
-            Bitmap var1 = BitmapFactory.decodeFile(urlMarkerPath);
-            if (var1 == null) {
-                if (!DefaultClusterRenderer.LOADING_LOGO)
-                    deleteFile(urlMarkerPath);
-                return null;
-            } else {
-                var1.recycle();
+    public BitmapDescriptor getUrlMarkerIconBitmapDescriptor(boolean select) {
+        if (select) {
+            if (!TextUtils.isEmpty(urlMarkerPath + BIG_END)) {
+                Bitmap var1 = BitmapFactory.decodeFile(urlMarkerPath + BIG_END);
+                if (var1 == null) {
+                    if (!DefaultClusterRenderer.LOADING_LOGO)
+                        deleteFile(urlMarkerPath + BIG_END);
+                    return null;
+                } else {
+                    var1.recycle();
+                }
+                return BitmapDescriptorFactory
+                        .fromPath(urlMarkerPath + BIG_END);
             }
-            return BitmapDescriptorFactory
-                    .fromPath(urlMarkerPath);
+        } else {
+            if (!TextUtils.isEmpty(urlMarkerPath)) {
+                Bitmap var1 = BitmapFactory.decodeFile(urlMarkerPath);
+                if (var1 == null) {
+                    if (!DefaultClusterRenderer.LOADING_LOGO)
+                        deleteFile(urlMarkerPath);
+                    return null;
+                } else {
+                    var1.recycle();
+                }
+                return BitmapDescriptorFactory
+                        .fromPath(urlMarkerPath);
+            }
         }
-
         return null;
     }
 

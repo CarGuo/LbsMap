@@ -9,6 +9,7 @@ import com.baidu.mapapi.clusterutil.clustering.Cluster;
 import com.baidu.mapapi.clusterutil.clustering.ClusterManager;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.Marker;
@@ -37,6 +38,8 @@ public class MainActivity extends BaseActivity {
 
     //所有的数量
     int mTotalCount;
+
+    ClusterBaiduItem mPreClickItem;
 
     Handler mHandler = new Handler();
 
@@ -112,6 +115,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public boolean onClusterItemClick(ClusterBaiduItem item) {
                 Toast.makeText(MainActivity.this, item.getLBAModel().getTitle(), Toast.LENGTH_SHORT).show();
+                IconClick(item);
                 return true;
             }
         });
@@ -268,7 +272,7 @@ public class MainActivity extends BaseActivity {
     /**
      * 下载lbs数据中对应的icon作为marker
      */
-    public static void DownLoadIcons(List<ClusterBaiduItem> clusterBaiduItems) {
+    private void DownLoadIcons(List<ClusterBaiduItem> clusterBaiduItems) {
         if (clusterBaiduItems == null || clusterBaiduItems.size() == 0)
             return;
         List<IconModel> logoUrl = new ArrayList<>();
@@ -284,7 +288,7 @@ public class MainActivity extends BaseActivity {
         }
         //执行下载图标的job
         if (logoUrl.size() > 0) {
-            IConJob iConJob = new IConJob(logoUrl);
+            IConJob iConJob = new IConJob(MainActivity.this, logoUrl);
             DemoApplication.getApplication().getJobManager().addJob(iConJob);
         }
     }
@@ -301,7 +305,7 @@ public class MainActivity extends BaseActivity {
                 BitmapDescriptor bitmapDescriptor;
                 if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) &&
                         new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
-                    bitmapDescriptor = clusterBaiduItem.getUrlMarkerIconBitmapDescriptor();
+                    bitmapDescriptor = clusterBaiduItem.getUrlMarkerIconBitmapDescriptor(false);
                     if (bitmapDescriptor == null) {
                         bitmapDescriptor = clusterBaiduItem.getBitmapDescriptor();
                     }
@@ -319,6 +323,52 @@ public class MainActivity extends BaseActivity {
             }
 
         }
+    }
+
+
+    /**
+     * 点击逻辑
+     */
+    private void IconClick(ClusterBaiduItem clusterBaiduItem) {
+        if (mPreClickItem != null) {
+            BitmapDescriptor bitmapDescriptor;
+            if (!TextUtils.isEmpty(mPreClickItem.getUrlLocalMarkerIconPath()) &&
+                    new File(mPreClickItem.getUrlLocalMarkerIconPath()).exists()) {
+                bitmapDescriptor = mPreClickItem.getUrlMarkerIconBitmapDescriptor(false);
+                if (bitmapDescriptor == null) {
+                    bitmapDescriptor = mPreClickItem.getBitmapDescriptor();
+                }
+            } else {
+                bitmapDescriptor = mPreClickItem.getBitmapDescriptor();
+            }
+            //从聚合管理器里面拿到marker，动态改变它
+            Marker marker = mClusterManager.getDefaultClusterRenderer().getMarker(mPreClickItem);
+            if (marker != null) {
+                marker.setIcon(bitmapDescriptor);
+            }
+        }
+
+        if (clusterBaiduItem != null) {
+            BitmapDescriptor bitmapDescriptor;
+            if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) &&
+                    new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
+                bitmapDescriptor = clusterBaiduItem.getUrlMarkerIconBitmapDescriptor(true);
+                if (bitmapDescriptor == null) {
+                    bitmapDescriptor = clusterBaiduItem.getBitmapDescriptor();
+                }
+            } else {
+                bitmapDescriptor = clusterBaiduItem.getBitmapDescriptor();
+            }
+            //从聚合管理器里面拿到marker，动态改变它
+            Marker marker = mClusterManager.getDefaultClusterRenderer().getMarker(clusterBaiduItem);
+            if (marker != null) {
+                marker.setIcon(bitmapDescriptor);
+            }
+            //刷新
+            mClusterManager.cluster();
+
+        }
+        mPreClickItem = clusterBaiduItem;
     }
 
 

@@ -5,10 +5,14 @@ import android.os.Environment;
 import java.io.File;
 
 public class FileUtils {
+
     private static final String SD_PATH = Environment.getExternalStorageDirectory().getPath();
+
     public static final String NAME = "LBSMap";
 
+    public static final String BIG_END = "big";
 
+    public static final int BIG_SIZE = 10;
 
     public static String getLogoNamePath(String urlIcon) {
         return FileUtils.getAppPath() + "/" + CommonUtil.MD5L(urlIcon) + "_";
