@@ -334,6 +334,7 @@ public class MainActivity extends BaseActivity {
      */
     private void IconClick(ClusterBaiduItem clusterBaiduItem) {
         if (mPreClickItem != null) {
+            mPreClickItem.setBitmapId(R.drawable.default_map_icon);
             BitmapDescriptor bitmapDescriptor;
             if (!TextUtils.isEmpty(mPreClickItem.getUrlLocalMarkerIconPath()) &&
                     new File(mPreClickItem.getUrlLocalMarkerIconPath()).exists()) {
@@ -352,6 +353,7 @@ public class MainActivity extends BaseActivity {
         }
 
         if (clusterBaiduItem != null) {
+            clusterBaiduItem.setBitmapId(R.drawable.default_map_icon_big);
             BitmapDescriptor bitmapDescriptor;
             if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) &&
                     new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
