@@ -15,7 +15,7 @@ public class LBSModel {
 
     private String icons;
 
-    private long geotable_id;
+    private long uid;
 
     private double longitude;                   //经度
 
@@ -23,12 +23,12 @@ public class LBSModel {
 
     private double location[];
 
-    public long getGeotable_id() {
-        return geotable_id;
+    public long getUid() {
+        return uid;
     }
 
-    public void setGeotable_id(long geotable_id) {
-        this.geotable_id = geotable_id;
+    public void setUid(long uid) {
+        this.uid = uid;
     }
 
     public String getTitle() {

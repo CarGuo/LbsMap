@@ -30,8 +30,6 @@ import static com.shuyu.lbsmap.utils.FileUtils.getLogoNamePath;
 
 public class RequestLogicJob extends Job {
 
-    private List<ClusterBaiduItem> mClusterBaiduItems = new ArrayList<>();
-
     private String mUUID;
 
     private Map<String, String> urlMap;
@@ -141,14 +139,13 @@ public class RequestLogicJob extends Job {
      */
     private void successResult(int totalCount, List<LBSModel> lbsModels) {
         if (lbsModels != null && lbsModels.size() != 0) {
-            this.mClusterBaiduItems.clear();
 
             //生成百度items
-            BaiduItemLogic(lbsModels);
+            List<ClusterBaiduItem> items = BaiduItemLogic(lbsModels);
 
             RequestDataEvent requestDataEvent = new RequestDataEvent();
             requestDataEvent.setEventType(RequestDataEvent.SUCCESS);
-            requestDataEvent.setClusterBaiduItems(mClusterBaiduItems);
+            requestDataEvent.setClusterBaiduItems(items);
             requestDataEvent.setDataList(lbsModels);
             requestDataEvent.setLastSize(lbsModels.size());
             requestDataEvent.setUUID(mUUID);
@@ -168,8 +165,7 @@ public class RequestLogicJob extends Job {
     /**
      * 组装百度需要的item
      */
-    private void BaiduItemLogic(List<LBSModel> list) {
-        mClusterBaiduItems.clear();
+    private List<ClusterBaiduItem> BaiduItemLogic(List<LBSModel> list) {
         List<ClusterBaiduItem> items = new ArrayList<>();
         for (LBSModel lbsModel : list) {
             LatLng ll = new LatLng(lbsModel.getLocation()[1], lbsModel.getLocation()[0]);
@@ -183,7 +179,7 @@ public class RequestLogicJob extends Job {
             }
             items.add(baiduItem);
         }
-        mClusterBaiduItems.addAll(items);
+        return items;
     }
 
     /**

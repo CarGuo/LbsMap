@@ -204,6 +204,7 @@ public class MainActivity extends BaseActivity {
      * 请求数据
      */
     private void netDataLogic(boolean isClearStatus) {
+        mHadRequest = true;
         //是否清除掉地图上已经有的
         clearStatus(isClearStatus);
         //请求当前数据是第几页
@@ -277,7 +278,7 @@ public class MainActivity extends BaseActivity {
             if (!TextUtils.isEmpty(clusterBaiduItem.getMarkerUrl()) && !new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
                 IconModel iconModel = new IconModel();
                 iconModel.setUrl(clusterBaiduItem.getMarkerUrl());
-                iconModel.setId(clusterBaiduItem.getLBAModel().getGeotable_id());
+                iconModel.setId(clusterBaiduItem.getLBAModel().getUid());
                 logoUrl.add(iconModel);
             }
         }
@@ -296,9 +297,10 @@ public class MainActivity extends BaseActivity {
         for (ClusterBaiduItem clusterBaiduItem : mClusterBaiduItems) {
             LBSModel lbsModel = clusterBaiduItem.getLBAModel();
             //此处根据id设置对应的图片
-            if (lbsModel.getGeotable_id() == e.geteId()) {
+            if (lbsModel.getUid() == e.geteId()) {
                 BitmapDescriptor bitmapDescriptor;
-                if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) && new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
+                if (!TextUtils.isEmpty(clusterBaiduItem.getUrlLocalMarkerIconPath()) &&
+                        new File(clusterBaiduItem.getUrlLocalMarkerIconPath()).exists()) {
                     bitmapDescriptor = clusterBaiduItem.getUrlMarkerIconBitmapDescriptor();
                     if (bitmapDescriptor == null) {
                         bitmapDescriptor = clusterBaiduItem.getBitmapDescriptor();

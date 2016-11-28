@@ -892,6 +892,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
                         onBeforeClusterItemRendered(item, markerOptions);
                         marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
                         markerWithPosition = new MarkerWithPosition(marker);
+                        //add myself 根据 item 缓存marker
                         mMarkerCache.put(item, marker);
                         if (animateFrom != null) {
                             markerModifier.animate(markerWithPosition, animateFrom, item.getPosition());

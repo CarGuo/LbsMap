@@ -108,9 +108,10 @@ public class IConJob extends Job {
 
     private void DownLoadNext() {
         size += 1;
-        if (size >= (logoUrlList.size() - 1)) {
+        if (size > (logoUrlList.size() - 1)) {
             DefaultClusterRenderer.LOADING_LOGO = false;
             IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
+            iconEvent.seteId(logoUrlList.get(logoUrlList.size() - 1).getId());
             DemoApplication.getApplication().getEventBus().post(iconEvent);
         } else {
             String url = logoUrlList.get(size).getUrl();
