@@ -149,7 +149,7 @@ public class BaseActivity extends AppCompatActivity implements BaiduMap.OnMapLoa
         mBaiduMapView.showScaleControl(true);
         // 缩放控件
         mBaiduMapView.showZoomControls(false);
-        // 百度地图LoGo -> 这个好像不大好，哈哈哈
+        // 百度地图LoGo -> 正式版切记不能这么做，本人只是觉得logo丑了
         mBaiduMapView.removeViewAt(1);
         //不倾斜
         mBaiduMap.getUiSettings().setOverlookingGesturesEnabled(false);
