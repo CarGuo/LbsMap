@@ -333,6 +333,7 @@ public class MainActivity extends BaseActivity {
      * 点击逻辑
      */
     private void IconClick(ClusterBaiduItem clusterBaiduItem) {
+        //恢复上一个点击为正常状态
         if (mPreClickItem != null) {
             mPreClickItem.setBitmapId(R.drawable.default_map_icon);
             BitmapDescriptor bitmapDescriptor;
@@ -351,7 +352,7 @@ public class MainActivity extends BaseActivity {
                 marker.setIcon(bitmapDescriptor);
             }
         }
-
+        //设置新的点击为大图状态
         if (clusterBaiduItem != null) {
             clusterBaiduItem.setBitmapId(R.drawable.default_map_icon_big);
             BitmapDescriptor bitmapDescriptor;
@@ -379,7 +380,7 @@ public class MainActivity extends BaseActivity {
     /**
      * 聚合点击
      */
-    private void ClusterOnClick(Cluster <ClusterBaiduItem> clusterBaiduItems) {
+    private void ClusterOnClick(Cluster<ClusterBaiduItem> clusterBaiduItems) {
         if (mBaiduMap == null) {
             return;
         }
