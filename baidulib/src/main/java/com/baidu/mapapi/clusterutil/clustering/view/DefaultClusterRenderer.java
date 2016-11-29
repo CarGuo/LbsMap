@@ -733,6 +733,7 @@ public class DefaultClusterRenderer<T extends ClusterItem> implements
             //拿到本地的图片，如果本地路径的图片有问题，那么就删除
             File file = new File(clusterItem.getUrlClusterIconPath());
             try {
+                //如果不是正在下载的
                 if (!DefaultClusterRenderer.LOADING_LOGO)
                     file.delete();
             } catch (Exception e) {

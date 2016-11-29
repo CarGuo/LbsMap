@@ -23,10 +23,19 @@ public interface ClusterItem {
 
     BitmapDescriptor getUrlClusterIconBitmapDescriptor();
 
+    /**
+     * 网络的单个marker的实例
+     */
     BitmapDescriptor getUrlMarkerIconBitmapDescriptor(boolean select);
 
+    /**
+     * 网络的单个marker的icon路径
+     */
     String getUrlLocalMarkerIconPath();
 
+    /**
+     * 网络的单个聚合的icon路径
+     */
     String getUrlClusterIconPath();
 
 }
