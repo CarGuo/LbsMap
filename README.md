@@ -11,6 +11,7 @@
 * 根据实际距离调整地图层级为屏幕大小
 * 分页刷新
 
+## [简书详解](http://www.jianshu.com/p/2479719af18c)
 
 ## 效果
 <img src="https://github.com/CarGuo/LBSMap/blob/master/01.jpg" width="240px" height="426px"/>
