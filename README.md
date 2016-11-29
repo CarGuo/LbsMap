@@ -26,7 +26,7 @@
 * <h4>2、选中效果</h4>
 <img src="https://github.com/CarGuo/LBSMap/blob/master/02.gif" width="240px" height="426px"/>
 
-* <h4>3、聚合展开</h4>
+* <h4>3、点击聚合Icon自动展开</h4>
 <img src="https://github.com/CarGuo/LBSMap/blob/master/03.gif" width="240px" height="426px"/>
 
 
