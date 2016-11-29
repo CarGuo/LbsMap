@@ -30,7 +30,6 @@
 <img src="https://github.com/CarGuo/LBSMap/blob/master/03.gif" width="240px" height="426px"/>
 
 
-像“到位”的顶部标签可以通过tag标签实现，加载距离调整层级即可。
-搜索的话可以通过q字段和filter字段来标识和过滤数据。
+### 像“到位”的顶部标签可以通过tag标签实现，加载距离调整层级即可。搜索的话可以通过q字段和filter字段来标识和过滤数据。
 
-如果后面有需要再补充吧。
+### 如果后面有需要再补充到DEMO吧。
