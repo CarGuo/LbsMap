@@ -82,6 +82,11 @@ public class CommonUtil {
 
         //还可以有关键字q，标签tag，排序sort，过滤等
 
+        //q的检索和热词分词，具体能检索到：设置的检索字段，地址，title等
+        //tag对应百度的tag字段，全匹配，可以设置逗号，空格分开等
+        //以上两个结合的话就是and关系哟，不是or关系。
+        //sort排序只能排序int或者double的字段
+        //过滤filter可以将检索到的数据再过滤一遍，支持离线和区间。
         return map;
     }
 
