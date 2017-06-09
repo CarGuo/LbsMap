@@ -7,14 +7,22 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.AnalyticsListener;
+import com.androidnetworking.interfaces.DownloadProgressListener;
 import com.baidu.mapapi.clusterutil.clustering.view.DefaultClusterRenderer;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
+import com.rx2androidnetworking.Rx2AndroidNetworking;
 import com.shuyu.lbsmap.DemoApplication;
 import com.shuyu.lbsmap.event.IconEvent;
 import com.shuyu.lbsmap.model.IconModel;
+import com.shuyu.lbsmap.utils.CommonUtil;
+import com.shuyu.lbsmap.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,6 +32,14 @@ import java.util.List;
 
 import cn.finalteam.okhttpfinal.FileDownloadCallback;
 import cn.finalteam.okhttpfinal.HttpRequest;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.shuyu.lbsmap.utils.CommonUtil.dip2px;
 import static com.shuyu.lbsmap.utils.CommonUtil.getBitmapSize;
@@ -56,7 +72,7 @@ public class IConJob extends Job {
 
     @Override
     public void onRun() throws Throwable {
-        handler.post(new Runnable() {
+        /*handler.post(new Runnable() {
             @Override
             public void run() {
                 if (logoUrlList != null && logoUrlList.size() > 0) {
@@ -64,7 +80,81 @@ public class IConJob extends Job {
                     downloadIcon(logoUrlList.get(size));
                 }
             }
-        });
+        });*/
+
+        DefaultClusterRenderer.LOADING_LOGO = true;
+        Observable.fromIterable(logoUrlList)
+                .filter(new Predicate<IconModel>() {
+                    @Override
+                    public boolean test(IconModel iconModel) throws Exception {
+                        File normalFile = new File(getLogoNamePath(iconModel.getUrl()));
+                        File bigFile = new File(getLogoNamePath(iconModel.getUrl()) + BIG_END);
+                        boolean flag = !(normalFile.exists() && bigFile.exists());
+                        if (!flag) {
+                            //通知更新
+                            IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
+                            iconEvent.seteId(iconModel.getId());
+                            DemoApplication.getApplication().getEventBus().post(iconEvent);
+                        }
+                        return flag;
+                    }
+                })
+                .flatMap(new Function<IconModel, ObservableSource<IconModel>>() {
+                    @Override
+                    public ObservableSource<IconModel>  apply(IconModel iconModel) throws Exception {
+                        return downloadFile(iconModel);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<IconModel>() {
+                    @Override
+                    public void onComplete() {
+                        DefaultClusterRenderer.LOADING_LOGO = false;
+                        IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
+                        iconEvent.seteId(logoUrlList.get(logoUrlList.size() - 1).getId());
+                        DemoApplication.getApplication().getEventBus().post(iconEvent);
+                        Log.e("******onComplete*****", "onComplete : " );
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        DefaultClusterRenderer.LOADING_LOGO = false;
+                        IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
+                        iconEvent.seteId(logoUrlList.get(logoUrlList.size() - 1).getId());
+                        DemoApplication.getApplication().getEventBus().post(iconEvent);
+                        Log.e("***********", "Throwable : " + e);
+                    }
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.e("******onSubscribe*****", "onSubscribe : " );
+                    }
+
+                    @Override
+                    public void onNext(IconModel iconModel) {
+                        final String name = getLogoNamePath(iconModel.getUrl()) + "tmp";
+                        Point point = getBitmapSize();
+                        changeIconToSuccess(name, name.replace("tmp", ""), point.x, point.y);
+                        //通知更新
+                        IconEvent iconEvent = new IconEvent(IconEvent.EventType.success);
+                        iconEvent.seteId(iconModel.getId());
+                        DemoApplication.getApplication().getEventBus().post(iconEvent);
+                        Log.e("***********", "onNext : " + name);
+                    }
+                });
+    }
+
+    private Observable<IconModel> downloadFile(final IconModel iconModel) {
+        final String name = CommonUtil.MD5L(iconModel.getUrl()) + "_" + "tmp";
+        return Rx2AndroidNetworking.download(iconModel.getUrl(), FileUtils.getAppPath(), name)
+                .build()
+                .getDownloadObservable()
+                .flatMap(new Function<String, ObservableSource<IconModel>>() {
+                    @Override
+                    public ObservableSource<IconModel> apply(String user) throws Exception {
+                        return Observable.fromArray(iconModel);
+                    }
+                });
     }
 
     @Override
@@ -82,7 +172,7 @@ public class IConJob extends Job {
     /**
      * 下载图标
      */
-    private void downloadIcon(final IconModel iconModel) {
+    /*private void downloadIcon(final IconModel iconModel) {
         //先保存为临时的，成功了在改名字
         final String name = getLogoNamePath(iconModel.getUrl()) + "tmp";
         File saveFile = new File(name);
@@ -122,10 +212,10 @@ public class IConJob extends Job {
                 DownLoadNext();
             }
         });
-    }
+    }*/
 
 
-    private void DownLoadNext() {
+    /*private void DownLoadNext() {
         size += 1;
         if (size > (logoUrlList.size() - 1)) {
             DefaultClusterRenderer.LOADING_LOGO = false;
@@ -141,7 +231,7 @@ public class IConJob extends Job {
                 DownLoadNext();
             }
         }
-    }
+    }*/
 
     private void changeIconToSuccess(String fromFile, String toFile, int width, int height) {
         try {

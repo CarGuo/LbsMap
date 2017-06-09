@@ -60,4 +60,5 @@ dependencies {
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
     compile 'com.jakewharton:butterknife:8.2.1'
     compile 'cn.finalteam:okhttpfinal:2.0.7'
+    compile 'com.amitshekhar.android:rx2-android-networking:1.0.0'
 }
